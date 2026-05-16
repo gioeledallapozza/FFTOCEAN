@@ -1,8 +1,7 @@
 import { OrbitControls } from '@react-three/drei';
 
 export default function Experience() {
-    const variabileRotta = nonEsisto;
-    
+
     return <>
         <OrbitControls makeDefault />
 
