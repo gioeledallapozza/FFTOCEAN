@@ -17,6 +17,7 @@ export default function App() {
       >
         <color attach="background" args={['#050505']} />
         <Experience />
+
       </Canvas>
     </>
   )
