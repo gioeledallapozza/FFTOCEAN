@@ -8,8 +8,9 @@ export default function App() {
       <Canvas className='webgl'
         camera = { 
           { 
-            position: [ 0, 3, 8 ],
-            fov: 45
+            position: [ 0, 500, 1000 ],
+            fov: 45,
+            far: 10000
           } 
         }
         drv = { [ 1, 2 ]}
