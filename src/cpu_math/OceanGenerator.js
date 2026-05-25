@@ -1,4 +1,3 @@
-import Complex from './Complex.js';
 import { calculatePhillips, calculateH0 } from './Phillips.js';
 import { computeIFFT2D } from './IFFT.js';
 
