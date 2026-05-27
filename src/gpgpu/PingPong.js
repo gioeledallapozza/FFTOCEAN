@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export class PingPong {
+export default class PingPong {
   constructor(resolution) {
     const options = {
       type: THREE.HalfFloatType, //To test also with FloatType

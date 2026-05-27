@@ -1,7 +1,12 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import PingPong from '../gpgpu/PingPong.js';
+import ComputePass from '../gpgpu/ComputePass.js';
+import butterflyVertex from '../gpgpu/shaders/butterflyvertex.glsl';
+import butterflyFragment from '../gpgpu/shaders/butterflyfragment.glsl';
 
+//Old CPU ocean
 import '../materials/OceanMaterial.js'
 import { OceanEngine } from '../cpu_math/OceanEngine.js';
 
@@ -12,30 +17,46 @@ export default function Ocean() {
     const resolution = 128;
     const patchSize = 1000.0;
 
+    //GPGPU Setup
+    const { pingPong, computePass } = useMemo(() => {
+        //Create PingPong Buffers
+        const pingPong = new PingPong(resolution);
+        
+        // Prepara il materiale con i tuoi shader di test
+        const testMaterial = new THREE.ShaderMaterial({
+            vertexShader: butterflyVertex,
+            fragmentShader: butterflyFragment
+        });
+        
+        const computePass = new ComputePass(testMaterial);
+        
+        return { pingPong, computePass };
+    }, [resolution]);
+
 
     //Ocean Engine
-    const oceanEngine = useMemo(() => {
-        const angle = 45 * (Math.PI / 180);
-        const windDir = { x: Math.cos(angle), y: Math.sin(angle) };
-        return new OceanEngine(resolution, patchSize, 20.0, windDir, 0.05); 
-    }, []);
+    // const oceanEngine = useMemo(() => {
+    //     const angle = 45 * (Math.PI / 180);
+    //     const windDir = { x: Math.cos(angle), y: Math.sin(angle) };
+    //     return new OceanEngine(resolution, patchSize, 20.0, windDir, 0.05); 
+    // }, []);
 
-    //Displacement Texture Setup
-    const displacementTexture = useMemo(() => {
-        const emptyBuffer = new Float32Array(resolution * resolution);
-        const texture = new THREE.DataTexture(
-            emptyBuffer, 
-            resolution, 
-            resolution, 
-            THREE.RedFormat, 
-            THREE.FloatType
-        );
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.minFilter = THREE.LinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        return texture;
-    }, []);
+    // //Displacement Texture Setup
+    // const displacementTexture = useMemo(() => {
+    //     const emptyBuffer = new Float32Array(resolution * resolution);
+    //     const texture = new THREE.DataTexture(
+    //         emptyBuffer, 
+    //         resolution, 
+    //         resolution, 
+    //         THREE.RedFormat, 
+    //         THREE.FloatType
+    //     );
+    //     texture.wrapS = THREE.RepeatWrapping;
+    //     texture.wrapT = THREE.RepeatWrapping;
+    //     texture.minFilter = THREE.LinearFilter;
+    //     texture.magFilter = THREE.LinearFilter;
+    //     return texture;
+    // }, []);
 
     //Geomtry Setup
     const oceanGeometry = useMemo(() => {
@@ -47,26 +68,36 @@ export default function Ocean() {
     //TICK
     useFrame((state) => 
     {
-        const time = state.clock.getElapsedTime();
+        computePass.render(state.gl, pingPong.writeTarget);
+        
+        // B. Inverti i buffer in modo che readTexture ora contenga i dati appena calcolati
+        pingPong.swap();
+        
+        // C. CRITICO: Resetta il render target a null!
+        // Altrimenti R3F proverà a renderizzare la tua scena 3D finale dentro il ping pong
+        state.gl.setRenderTarget(null);
 
-        if (materialRef.current)
-            materialRef.current.uTime = time;
+        // const time = state.clock.getElapsedTime();
 
-        const newHeights = oceanEngine.generateFrame(time);
+        // if (materialRef.current)
+        //     materialRef.current.uTime = time;
+
+        // const newHeights = oceanEngine.generateFrame(time);
 
   
-        displacementTexture.image.data.set(newHeights);
-        displacementTexture.needsUpdate = true;
+        // displacementTexture.image.data.set(newHeights);
+        // displacementTexture.needsUpdate = true;
     });
 
 
     return <>
         <mesh geometry={oceanGeometry}>
-            <oceanMaterial 
+            {/* <oceanMaterial 
                 ref = { materialRef } 
                 uDisplacementMap = { displacementTexture }
                 wireframe = { false }
-            />
+            /> */}
+            <meshBasicMaterial map={pingPong.readTexture} />
         </mesh>
     </>
 }
