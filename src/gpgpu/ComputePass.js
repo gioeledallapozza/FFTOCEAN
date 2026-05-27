@@ -24,8 +24,8 @@ export default class ComputePass {
 
   // Main Engine
   render(gl, target = null) {
-    gl.setRenderTarget(target);
+    gl.setRenderTarget(target); //Redirect rendering target to the ping pong buffer
 
-    gl.render(this.scene, this.camera);
+    gl.render(this.scene, this.camera); //Render
   }
 }

@@ -34,7 +34,7 @@ export default function Ocean() {
     }, [resolution]);
 
 
-    //Ocean Engine
+    //OLD Ocean Engine
     // const oceanEngine = useMemo(() => {
     //     const angle = 45 * (Math.PI / 180);
     //     const windDir = { x: Math.cos(angle), y: Math.sin(angle) };
@@ -68,15 +68,17 @@ export default function Ocean() {
     //TICK
     useFrame((state) => 
     {
+        // Tell to the renderer to render the computePass.scene and save it in writeTarget
         computePass.render(state.gl, pingPong.writeTarget);
         
-        // B. Inverti i buffer in modo che readTexture ora contenga i dati appena calcolati
+        //Invert the buffers
         pingPong.swap();
         
-        // C. CRITICO: Resetta il render target a null!
-        // Altrimenti R3F proverà a renderizzare la tua scena 3D finale dentro il ping pong
+        //Set render target to null (default frameBuffer)
+        //The final render of the mesh will be outputted on the screeen
         state.gl.setRenderTarget(null);
 
+        //OLD CPU OCEAN
         // const time = state.clock.getElapsedTime();
 
         // if (materialRef.current)
