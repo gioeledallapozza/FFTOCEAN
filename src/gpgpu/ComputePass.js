@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export default class ComputePass {
   constructor(material) {
 
-    //Inizializzazione camera, con lo spazio CLIP di WebGL
+    //Initialization camera, CLIP space of WebGL
     this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
     this.scene = new THREE.Scene();
