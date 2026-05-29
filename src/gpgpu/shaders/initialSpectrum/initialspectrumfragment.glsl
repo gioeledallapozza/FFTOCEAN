@@ -6,8 +6,8 @@ uniform vec2 uWindDirection;
 
 varying vec2 vUv;
 
-#include "./includes/complex.glsl"
-#include "./includes/random.glsl"
+#include "../includes/complex.glsl"
+#include "../includes/random.glsl"
 
 float calculatePhillips(vec2 k, float windSpeed, vec2 windDir, float amplitude, float kMagnitude) {
 

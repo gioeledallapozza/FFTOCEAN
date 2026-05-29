@@ -1,6 +1,6 @@
 varying vec2 vUv;
 
-#include "./includes/complex.glsl"
+#include "../includes/complex.glsl"
 
 void main()
 {

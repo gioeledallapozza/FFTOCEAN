@@ -14,7 +14,7 @@ export default function Ocean() {
     const patchSize = 1000.0;
 
     // Inizializza la scatola nera GPGPU
-    const { displacementTexture, updateGPGPU } = useOceanGPGPU(resolution);
+    const { displacementTexture, updateGPGPU } = useOceanGPGPU(resolution, patchSize);
 
     const oceanGeometry = useMemo(() => {
         const geometry = new THREE.PlaneGeometry(patchSize, patchSize, resolution, resolution);

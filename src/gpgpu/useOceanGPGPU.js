@@ -4,15 +4,12 @@ import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import PingPong from './PingPong.js';
 import ComputePass from './ComputePass.js';
-import butterflyVertex from './shaders/butterflyvertex.glsl';
-import butterflyFragment from './shaders/butterflyfragment.glsl';
-import initialSpectrumVertex from '../gpgpu/shaders/initialspectrumvertex.glsl';
-import initialSpectrumFragment from '../gpgpu/shaders/initialspectrumfragment.glsl';
-import { compute } from 'three/tsl';
+import butterflyVertex from './shaders/butterfly/butterflyvertex.glsl';
+import butterflyFragment from './shaders/butterfly/butterflyfragment.glsl';
+import initialSpectrumVertex from '../gpgpu/shaders/initialSpectrum/initialspectrumvertex.glsl';
+import initialSpectrumFragment from '../gpgpu/shaders/initialSpectrum/initialspectrumfragment.glsl';
 
-
-
-export function useOceanGPGPU(resolution){
+export function useOceanGPGPU(resolution, patchSize){
 
     //WebGL Renderer
     const { gl } = useThree();
@@ -60,7 +57,14 @@ export function useOceanGPGPU(resolution){
 
         const initialSpectrumMaterial = new THREE.ShaderMaterial({
             vertexShader: initialSpectrumVertex, 
-            fragmentShader: initialSpectrumFragment
+            fragmentShader: initialSpectrumFragment,
+            uniforms: {
+                uResolution: { value: resolution },
+                uPatchSize: { value: patchSize },
+                uAmplitude: { value: 20.0 },
+                uWindSpeed: { value: 10.0 },
+                uWindDirection: { value: new THREE.Vector2(1.0, 1.0).normalize() }
+            }
         });
 
         //Set and render the new material with the provided fragment to calculate the h0Spectrum
