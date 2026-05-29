@@ -22,9 +22,10 @@ export default function Ocean() {
         return geometry;
     }, [patchSize, resolution]);
 
-    useFrame(({ gl }) => {
+    useFrame(({ gl, clock }) => {
+        const time = clock.getElapsedTime();
         //Update texture
-        updateGPGPU(gl);
+        updateGPGPU(gl, time);
     });
 
     return (

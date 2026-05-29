@@ -8,6 +8,8 @@ import butterflyVertex from './shaders/butterfly/butterflyvertex.glsl';
 import butterflyFragment from './shaders/butterfly/butterflyfragment.glsl';
 import initialSpectrumVertex from '../gpgpu/shaders/initialSpectrum/initialspectrumvertex.glsl';
 import initialSpectrumFragment from '../gpgpu/shaders/initialSpectrum/initialspectrumfragment.glsl';
+import timeEvolutionVertex from './shaders/timeEvolution/timeevolutionvertex.glsl';
+import timeEvolutionFragment from './shaders/timeEvolution/timeevolutionfragment.glsl';
 
 export function useOceanGPGPU(resolution, patchSize){
 
@@ -35,17 +37,27 @@ export function useOceanGPGPU(resolution, patchSize){
 
     
     //Initialize pingPong textures and computePass renderer
-    const { pingpong, computePass } = useMemo(() => {
+    const { pingpong, computePass, butterflyMaterial, timeEvolutionMaterial } = useMemo(() => {
         const pingpong = new PingPong(resolution);
         
-        const testMaterial = new THREE.ShaderMaterial({
+        //Main material for butterfly calculations
+        const butterflyMaterial = new THREE.ShaderMaterial({
             vertexShader: butterflyVertex,
             fragmentShader: butterflyFragment
         });
         
-        const computePass = new ComputePass(testMaterial);
+        const computePass = new ComputePass(butterflyMaterial);
+
+        const timeEvolutionMaterial = new THREE.ShaderMaterial({
+            vertexShader: timeEvolutionVertex,
+            fragmentShader: timeEvolutionFragment,
+            uniforms: {
+                uH0Target: { value: h0Target.texture },
+                uTime: { value: 0 }
+            }
+        });
         
-        return { pingpong: pingpong, computePass: computePass };
+        return { pingpong, computePass, butterflyMaterial, timeEvolutionMaterial };
     }, [resolution]);
 
 
@@ -63,7 +75,7 @@ export function useOceanGPGPU(resolution, patchSize){
                 uPatchSize: { value: patchSize },
                 uAmplitude: { value: 20.0 },
                 uWindSpeed: { value: 10.0 },
-                uWindDirection: { value: new THREE.Vector2(1.0, 1.0).normalize() }
+                uWindDirection: { value: new THREE.Vector2(-0.5, 1.0).normalize() }
             }
         });
 
@@ -80,10 +92,17 @@ export function useOceanGPGPU(resolution, patchSize){
         };
     }, [gl, computePass, h0Target]);
 
+    //TICK function
+    const updateGPGPU = (gl, time) => {
 
-    const updateGPGPU = (gl) => {
+        timeEvolutionMaterial.uniforms.uTime.value = time;
+        //Update the spectrum using the time rotation
+        computePass.setMaterial(timeEvolutionMaterial);
+
         computePass.render(gl, pingpong.writeTarget);
         pingpong.swap();
+
+        //BUTTERGLY LOGIC
 
         //Default renderer
         gl.setRenderTarget(null); 
