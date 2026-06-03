@@ -1,11 +1,7 @@
 import { useMemo, useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { useControls } from 'leva'
 import { useOceanGPGPU } from '../../gpgpu/useOceanGPGPU.js'
-
-
-/* eslint-disable react-hooks/immutability */
 
 export default function Ocean({
     resolution, 

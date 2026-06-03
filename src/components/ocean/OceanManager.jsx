@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
-import { useControls, folder } from 'leva'
+import { useControls } from 'leva'
 import Ocean from './Ocean.jsx'
 
 export default function OceanManager() {

@@ -14,6 +14,8 @@ import initialSpectrumFragment from '../gpgpu/shaders/initialSpectrum/initialspe
 import timeEvolutionVertex from './shaders/timeEvolution/timeevolutionvertex.glsl';
 import timeEvolutionFragment from './shaders/timeEvolution/timeevolutionfragment.glsl';
 
+/* eslint-disable react-hooks/immutability */
+
 export function useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windDirection){
 
     //WebGL Renderer
