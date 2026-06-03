@@ -1,4 +1,5 @@
 uniform sampler2D uH0Target; //R = REAL, G = IMG, B = OMEGA
+uniform float uResolution;
 uniform float uTime;
 
 varying vec2 vUv;
@@ -11,7 +12,8 @@ void main()
 
     
     vec2 h0 = texture2D(uH0Target, vUv).rg; //Wave vector: Get the real and imgaginary 
-    vec2 h0_minus_k = texture2D(uH0Target, 1.0 - vUv).rg; //Opposite wave vector
+    vec2 negUv = mod(1.0 - vUv + (1.0 / uResolution), 1.0);
+    vec2 h0_minus_k = texture2D(uH0Target, negUv).rg; //Opposite wave vector
 
     //complex coniugate
     vec2 h0_minus_k_conj = vec2(h0_minus_k.x, -h0_minus_k.y);

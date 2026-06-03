@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export default class PingPong {
   constructor(resolution) {
     const options = {
-      type: THREE.HalfFloatType, //To test also with FloatType
+      type: THREE.FloatType, //To test also with FloatType
       minFilter: THREE.NearestFilter, //disable interpolation beetween pixels
       magFilter: THREE.NearestFilter,
       format: THREE.RGBAFormat,
