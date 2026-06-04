@@ -42,8 +42,10 @@ export function useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windD
 
     
     //Initialize pingPong textures and computePass renderer
-    const { pingpong, computePass, butterflyMaterial, timeEvolutionMaterial } = useMemo(() => {
-        const pingpong = new PingPong(resolution);
+    const { pingpongY, pingpongX, pingpongZ, computePass, butterflyMaterial, timeEvolutionMaterial } = useMemo(() => {
+        const pingpongY = new PingPong(resolution);
+        const pingpongX = new PingPong(resolution);
+        const pingpongZ = new PingPong(resolution);
 
         const butterflyTexture = generateButterflyTexture(resolution); //Precalculate and map even/odd indices and twiddle factors.
         
@@ -68,12 +70,14 @@ export function useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windD
             uniforms: {
                 uH0Target: { value: h0Target.texture },
                 uResolution: { value: resolution },
-                uTime: { value: 0 }
+                uTime: { value: 0 },
+                uPatchSize: { value: patchSize },
+                uOutputMode: { value: 0 } // 0 = Height (Y), 1 = Choppy (X), 2 = Choppy (Z)
             }
         });
         
-        return { pingpong, computePass, butterflyMaterial, timeEvolutionMaterial };
-    }, [resolution, h0Target]);
+        return { pingpongY, pingpongX, pingpongZ, computePass, butterflyMaterial, timeEvolutionMaterial };
+    }, [resolution, h0Target, patchSize]);
 
 
     //Create the initial spectrum creating the material and passing to computePass
@@ -111,13 +115,19 @@ export function useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windD
     useEffect(() => {
         return () => {
             h0Target.dispose();
-            
-            // Pulizia difensiva: distrugge solo ciò che esiste realmente nella tua classe PingPong
-            if (pingpong.readTarget) pingpong.readTarget.dispose();
-            if (pingpong.writeTarget) pingpong.writeTarget.dispose();
-            if (pingpong.fbo1) pingpong.fbo1.dispose(); // Nome alternativo comune
-            if (pingpong.fbo2) pingpong.fbo2.dispose(); // Nome alternativo comune
-            
+
+            //Utility function to dispose ping pong textures and FBOs
+            const disposePingPong = (pp) => {
+                if (pp.readTarget) pp.readTarget.dispose();
+                if (pp.writeTarget) pp.writeTarget.dispose();
+                if (pp.fbo1) pp.fbo1.dispose(); 
+                if (pp.fbo2) pp.fbo2.dispose(); 
+            };
+
+            disposePingPong(pingpongY);
+            disposePingPong(pingpongX);
+            disposePingPong(pingpongZ);
+
             if (butterflyMaterial.uniforms.uButterflyTexture.value) {
                 butterflyMaterial.uniforms.uButterflyTexture.value.dispose();
             }
@@ -125,7 +135,7 @@ export function useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windD
             timeEvolutionMaterial.dispose();
             butterflyMaterial.dispose();
         };
-    }, [h0Target, pingpong, butterflyMaterial, timeEvolutionMaterial, computePass]);
+    }, [h0Target, pingpongY, pingpongX, pingpongZ, butterflyMaterial, timeEvolutionMaterial, computePass]);
 
     //TICK function
     const updateGPGPU = (gl, time) => {
@@ -134,8 +144,22 @@ export function useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windD
         //Update the spectrum using the time rotation
         computePass.setMaterial(timeEvolutionMaterial);
 
-        computePass.render(gl, pingpong.writeTarget);
-        pingpong.swap();
+        //Time evolution for each component of the spectrum. 
+        //We need 6 total outputs channels so we need more than 1 texture
+        // Y (Height)
+        timeEvolutionMaterial.uniforms.uOutputMode.value = 0;
+        computePass.render(gl, pingpongY.writeTarget);
+        pingpongY.swap();
+
+        // X (Choppiness)
+        timeEvolutionMaterial.uniforms.uOutputMode.value = 1;
+        computePass.render(gl, pingpongX.writeTarget);
+        pingpongX.swap();
+
+        // Z (Choppiness)
+        timeEvolutionMaterial.uniforms.uOutputMode.value = 2;
+        computePass.render(gl, pingpongZ.writeTarget);
+        pingpongZ.swap();
 
         //BUTTERFLY LOGIC
         computePass.setMaterial(butterflyMaterial);
@@ -146,26 +170,53 @@ export function useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windD
         butterflyMaterial.uniforms.uDirection.value = 0;
         for(let i = 0; i < iterations; i++) {
             butterflyMaterial.uniforms.uStage.value = i;
-            butterflyMaterial.uniforms.uPingPongTexture.value = pingpong.readTexture;
 
-            computePass.render(gl, pingpong.writeTarget);
-            pingpong.swap();
+
+            // Y
+            butterflyMaterial.uniforms.uPingPongTexture.value = pingpongY.readTexture;
+            computePass.render(gl, pingpongY.writeTarget);
+            pingpongY.swap();
+
+            // X
+            butterflyMaterial.uniforms.uPingPongTexture.value = pingpongX.readTexture;
+            computePass.render(gl, pingpongX.writeTarget);
+            pingpongX.swap();
+
+            // Z
+            butterflyMaterial.uniforms.uPingPongTexture.value = pingpongZ.readTexture;
+            computePass.render(gl, pingpongZ.writeTarget);
+            pingpongZ.swap();
         }
 
         // Vertical Passes
         butterflyMaterial.uniforms.uDirection.value = 1;
         for(let i = 0; i < iterations; i++) {
             butterflyMaterial.uniforms.uStage.value = i;
-            butterflyMaterial.uniforms.uPingPongTexture.value = pingpong.readTexture;
 
-            computePass.render(gl, pingpong.writeTarget);
-            pingpong.swap();
+            // Y
+            butterflyMaterial.uniforms.uPingPongTexture.value = pingpongY.readTexture;
+            computePass.render(gl, pingpongY.writeTarget);
+            pingpongY.swap();
+
+            // X
+            butterflyMaterial.uniforms.uPingPongTexture.value = pingpongX.readTexture;
+            computePass.render(gl, pingpongX.writeTarget);
+            pingpongX.swap();
+
+            // Z
+            butterflyMaterial.uniforms.uPingPongTexture.value = pingpongZ.readTexture;
+            computePass.render(gl, pingpongZ.writeTarget);
+            pingpongZ.swap();
         }
 
         //Default renderer
         gl.setRenderTarget(null); 
 
-        return pingpong.readTexture;
+        return {
+            displacementY: pingpongY.readTexture,
+            displacementX: pingpongX.readTexture,
+            displacementZ: pingpongZ.readTexture
+        };
     };
 
     return { 

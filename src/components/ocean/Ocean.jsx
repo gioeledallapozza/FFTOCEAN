@@ -3,6 +3,9 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useOceanGPGPU } from '../../gpgpu/useOceanGPGPU.js'
 
+import oceanVertex from '../../materials/shaders/oceanVertex.glsl';
+import oceanFragment from '../../materials/shaders/oceanFragment.glsl';
+
 export default function Ocean({
     resolution, 
     patchSize, 
@@ -30,25 +33,43 @@ export default function Ocean({
         };
     }, [oceanGeometry]);
 
+    //Custom uniforms for the ocean shader
+    const customUniforms = useMemo(() => ({
+        uDisplacementY: { value: null },
+        uDisplacementX: { value: null },
+        uDisplacementZ: { value: null },
+        uScale: { value: displacementScale }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), []);
+
+    //Update scale uniform when it changes
+    useEffect(() => {
+        if (materialRef.current) {
+            materialRef.current.uniforms.uScale.value = displacementScale;
+        }
+    }, [displacementScale]);
+
+
     useFrame(({ gl, clock }) => {
         const time = clock.getElapsedTime();
         //Update texture
-        const currentTexture = updateGPGPU(gl, time);
+        const { displacementY, displacementX, displacementZ } = updateGPGPU(gl, time);
 
-       if (materialRef.current) {
-            materialRef.current.displacementMap = currentTexture;
-            materialRef.current.displacementScale = displacementScale;
-            materialRef.current.needsUpdate = true;
+     if (materialRef.current) {
+            materialRef.current.uniforms.uDisplacementY.value = displacementY;
+            materialRef.current.uniforms.uDisplacementX.value = displacementX;
+            materialRef.current.uniforms.uDisplacementZ.value = displacementZ;
         }
     });
 
     return (<>
         <mesh geometry={oceanGeometry}>
-            <meshStandardMaterial 
+            <shaderMaterial 
                 ref={materialRef}
-                displacementScale={0.25}
-                wireframe={true} 
-                color="cyan" // Solo per dare un colore di base al wireframe
+                vertexShader={oceanVertex}
+                fragmentShader={oceanFragment}
+                uniforms={customUniforms}
+                wireframe={true}
             />
         </mesh>
 
