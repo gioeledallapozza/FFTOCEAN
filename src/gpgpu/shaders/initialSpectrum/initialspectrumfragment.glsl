@@ -4,6 +4,8 @@ uniform float uAmplitude;
 uniform float uWindSpeed;
 uniform vec2 uWindDirection;
 
+precision highp float;
+
 varying vec2 vUv;
 
 #include "../includes/complex.glsl"

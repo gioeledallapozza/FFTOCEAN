@@ -9,28 +9,21 @@ export default class PingPong {
       format: THREE.RGBAFormat,
       depthBuffer: false, //we don't need depth calculation
       stencilBuffer: false, //we don't need stencil calculation
-      generateMipmaps: false 
+      generateMipmaps: false,
+      count: 3 //MRT activation for 3 textures (Y,X,Z) in the same shader pass
     };
     
+    //WebGL2
     this.targetA = new THREE.WebGLRenderTarget(resolution, resolution, options);
-
     this.targetB = new THREE.WebGLRenderTarget(resolution, resolution, options);
 
-    this.readBuffer = this.targetA;
-    this.writeBuffer = this.targetB;
+    this.readTarget = this.targetA;
+    this.writeTarget = this.targetB;
   }
 
   swap() {
-    const temp = this.readBuffer;
-    this.readBuffer = this.writeBuffer;
-    this.writeBuffer = temp;
-  }
-
-  get readTexture() {
-    return this.readBuffer.texture;
-  }
-
-  get writeTarget() {
-    return this.writeBuffer;
+    const temp = this.readTarget;
+    this.readTarget = this.writeTarget;
+    this.writeTarget = temp;
   }
 }
