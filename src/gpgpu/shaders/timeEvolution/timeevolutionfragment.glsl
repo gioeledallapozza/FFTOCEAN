@@ -1,25 +1,29 @@
 uniform sampler2D uH0Target; //R = REAL, G = IMG, B = OMEGA
 uniform float uResolution;
 uniform float uTime;
-
 uniform float uPatchSize; 
-uniform int uOutputMode; // 0 = Height (Y), 1 = Choppy (X), 2 = Choppy (Z)
 
-varying vec2 vUv;
+precision highp float;
+
+in vec2 vUv; //Varying
+
+layout(location = 0) out vec4 outHeight; //ouput texture for height (Y)
+layout(location = 1) out vec4 outChoppyX; //ouput texture for choppy X
+layout(location = 2) out vec4 outChoppyZ; //ouput texture for choppy Z
 
 #include "../includes/complex.glsl"
 
 void main()
 {
     // Tessendorf formula: H(k,t) = H0(k)e^ikt + H0*(-k)e^-iwt
-    vec2 h0 = texture2D(uH0Target, vUv).rg; //Wave vector: Get the real and imgaginary 
+    vec2 h0 = texture(uH0Target, vUv).rg; //Wave vector: Get the real and imgaginary 
     vec2 negUv = mod(1.0 - vUv + (1.0 / uResolution), 1.0);
-    vec2 h0_minus_k = texture2D(uH0Target, negUv).rg; //Opposite wave vector
+    vec2 h0_minus_k = texture(uH0Target, negUv).rg; //Opposite wave vector
 
     //complex coniugate
     vec2 h0_minus_k_conj = vec2(h0_minus_k.x, -h0_minus_k.y);
 
-    float omega = texture2D(uH0Target, vUv).b; //Angular frequency. (How fast a wave moves based on how heavy is it)
+    float omega = texture(uH0Target, vUv).b; //Angular frequency. (How fast a wave moves based on how heavy is it)
     float phase = omega * uTime;  //shift to apply: velocity * time = phase 
 
     //Rotation angle
@@ -51,19 +55,16 @@ void main()
     // Formula: (a + bi) * -i = b - ai
     vec2 h_choppy = vec2(final_h0.y, -final_h0.x);
 
-    //ouput based on the selected mode, we need 6 channels in total
-    if (uOutputMode == 0) {
-        //Height Y: R = REAL, G = IMG
-        gl_FragColor = vec4(final_h0.x, final_h0.y, 0.0, 1.0);
-    } 
-    else if (uOutputMode == 1) {
-        // Choppy X: R = REAL, G = IMG
-        vec2 dx = h_choppy * kNormal.x;
-        gl_FragColor = vec4(dx, 0.0, 1.0);
-    } 
-    else if (uOutputMode == 2) {
-        // Choppy Z: R = REAL, G = IMG
-        vec2 dz = h_choppy * kNormal.y;
-        gl_FragColor = vec4(dz, 0.0, 1.0);
-    }
+    // Simultaneus Writing MRT
+    // Index 0 = Y (Altezza)
+    // Index 1 = X (Choppiness)
+    // Index 2 = Z (Choppiness)
+
+    outHeight = vec4(final_h0.x, final_h0.y, 0.0, 1.0);   //Height Y: R = REAL, G = IMG
+
+    vec2 dx = h_choppy * kNormal.x;
+    outChoppyX = vec4(dx, 0.0, 1.0); // Choppy X: R = REAL, G = IMG
+
+    vec2 dz = h_choppy * kNormal.y;
+    outChoppyZ = vec4(dz, 0.0, 1.0); // Choppy Z: R = REAL, G = IMG
 }

@@ -1,10 +1,18 @@
  uniform float uStage;
  uniform float uStages;
  uniform int uDirection;
- uniform sampler2D uPingPongTexture;
  uniform sampler2D uButterflyTexture; // RGBA = (evenIndex, oddIndex, twiddleReal, twiddleImag)
+ uniform sampler2D uPingPongTextureY;
+ uniform sampler2D uPingPongTextureX;
+ uniform sampler2D uPingPongTextureZ;
 
-varying vec2 vUv;
+ precision highp float;
+
+in vec2 vUv; //Varying
+
+layout(location = 0) out vec4 outHeight; //ouput texture for height (Y)
+layout(location = 1) out vec4 outChoppyX; //ouput texture for choppy X
+layout(location = 2) out vec4 outChoppyZ; //ouput texture for choppy Z
 
 #include "../includes/complex.glsl"
 
@@ -42,15 +50,27 @@ void main()
     }
 
     // Retrive data 
-    vec2 evenComplex = texture2D(uPingPongTexture, evenUv).rg;
-    vec2 oddComplex = texture2D(uPingPongTexture, oddUv).rg;
+    vec2 evenComplex_Y = texture(uPingPongTextureY, evenUv).rg;
+    vec2 oddComplex_Y = texture(uPingPongTextureY, oddUv).rg;
+
+    vec2 evenComplex_X = texture(uPingPongTextureX, evenUv).rg;
+    vec2 oddComplex_X = texture(uPingPongTextureX, oddUv).rg;
+
+    vec2 evenComplex_Z = texture(uPingPongTextureZ, evenUv).rg;
+    vec2 oddComplex_Z = texture(uPingPongTextureZ, oddUv).rg;
 
     //Rotate odd element to align with the even element
-    vec2 rotatedOdd = complexMultiply(twiddle, oddComplex);
+    vec2 rotatedOdd_Y = complexMultiply(twiddle, oddComplex_Y);
+    vec2 rotatedOdd_X = complexMultiply(twiddle, oddComplex_X);
+    vec2 rotatedOdd_Z = complexMultiply(twiddle, oddComplex_Z);
 
     // Butterfly combine
-    vec2 result = evenComplex + rotatedOdd; //The CPU already handled the sign for the upper/lower half 
+    vec2 result_Y = evenComplex_Y + rotatedOdd_Y; //The CPU already handled the sign for the upper/lower half 
+    vec2 result_X = evenComplex_X + rotatedOdd_X;
+    vec2 result_Z = evenComplex_Z + rotatedOdd_Z;
 
     //Result: processed 
-    gl_FragColor = vec4(result.x, result.y, 0.0, 1.0);
+    outHeight = vec4(result_Y, 0.0, 1.0);
+    outChoppyX = vec4(result_X, 0.0, 1.0);
+    outChoppyZ = vec4(result_Z, 0.0, 1.0);
 }
