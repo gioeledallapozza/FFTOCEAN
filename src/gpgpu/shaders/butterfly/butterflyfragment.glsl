@@ -29,7 +29,7 @@ void main()
     float stageUv = (uStage + 0.5) / uStages; 
 
     // Read from texture to get the indices and twiddle factors for this stage and pixel
-    vec4 instructions = texture2D(uButterflyTexture, vec2(stageUv, pixelIndex));
+    vec4 instructions = texture(uButterflyTexture, vec2(stageUv, pixelIndex));
 
     float uEven = instructions.r;
     float uOdd = instructions.g;

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
-import { useControls } from 'leva'
+import { useControls, folder } from 'leva'
 import Ocean from './Ocean.jsx'
 
 export default function OceanManager() {
@@ -61,6 +61,52 @@ export default function OceanManager() {
         return new THREE.Vector2(windDirX, windDirY).normalize();
     }, [windDirX, windDirY]);
 
+
+    //Optics controls
+    const opticsControls = useControls('Ocean Optics', {
+        // Base colors
+        Basic: folder({
+            waterDeep: { value: '#03656e' },
+            waterShallow: { value: '#03808b' },
+            colorMinHeight: {  value: -10.0, min: -10.0, max: 0.0, step: 0.1 },
+            colorMaxHeight: { value: 10.0, min: 0.0, max: 10.0, step: 0.1 }
+        }),
+        //SPECULAR
+        Specular: folder({
+            sunPosition: [0.0, 20.0, -500.0],
+            sunColor: { value: '#ffe599' }, 
+            specularPower: { value: 16.0, min: 10.0, max: 300.0, step: 1.0 },
+            specularMin: { value: 0.0, min: 0.0, max: 1.0, step: 0.01 },
+            specularMax: { value: 1.0, min: 0.0, max: 1.0, step: 0.01 },
+            specularIntensity: { value: 2.0, min: 0.0, max: 10.0, step: 0.1 }
+        }),
+
+        //Temporary Sky color
+        Environment: folder({
+            skyColor: { value: '#d6d6b6' }
+        }),
+        
+        // Subsurface Scattering (SSS)
+        SSS: folder({
+            waterSSS: { value: '#43c3ab' },
+            sssPower: { value: 5.0, min: 1.0, max: 20.0, step: 0.1 },
+            sssScale: { value: 0.5, min: 0.0, max: 5.0, step: 0.1 },
+            sssMinHeight: { value: -0.2, min: -2.0, max: 2.0, step: 0.01 },
+            sssMaxHeight: { value: 1.0, min: -2.0, max: 5.0, step: 0.01 },
+            sssWrap: { value: 0.2, min: 0.0, max: 1.0, step: 0.01 }
+        }),
+        
+        // Foam
+        Foam: folder({
+            foamColor: { value: '#ffffff' },
+            foamThreshold: { value: 25.5, min: -10.0, max: 50.0, step: 0.1 },
+            foamScale: { value: 30.0, min: 1.0, max: 100.0, step: 0.1 },
+            foamSpeed: [0.4, 0.8],
+            foamDistortion: { value: 0.8, min: 0.0, max: 3.0, step: 0.01 },
+            foamEdgeSoftness: { value: 0.1, min: 0.001, max: 1.0, step: 0.01 }
+        })
+    });
+
     return (
         <Ocean 
             resolution={resolution}
@@ -69,6 +115,7 @@ export default function OceanManager() {
             windSpeed={windSpeed}
             windDirection={windDirection}
             displacementScale={displacementScale}
+            optics={opticsControls}
         />
     )
 }
