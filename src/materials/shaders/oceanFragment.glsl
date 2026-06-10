@@ -37,6 +37,7 @@ in vec2 vUv;
 in vec3 vWorldPosition;
 in vec3 vViewDirection;
 in float vHeight;
+in vec3 vNormal;
 
 out vec4 fragColor;
 
@@ -51,11 +52,7 @@ void main()
     vec3 finalColor = waterColor; //Initalize final color
 
     //NORMALS
-    //Calculate normal based on partial derivatives (TODO: use GPGPU for REAL normal calculation)
-    vec3 partialDx = dFdx(vWorldPosition);
-    vec3 partialDy = dFdy(vWorldPosition);
-    vec3 normal = normalize(cross(partialDx, partialDy)); //Cross product to get normals
-    if (normal.y < 0.0) normal = -normal;
+    vec3 normal = normalize(vNormal);
 
     //VECTORAL DIRECTIONS
     vec3 viewDirection = normalize(vViewDirection); //We need to normalize again

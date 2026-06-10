@@ -7,19 +7,29 @@ out vec2 vUv; //Varying
 out vec3 vWorldPosition;
 out vec3 vViewDirection;
 out float vHeight;
+out vec3 vNormal;
 
 void main()
 {
     // Read X,Y,Z displacements 
-    float dy = texture(uDisplacementY, uv).r;
-    float dx = texture(uDisplacementX, uv).r;
-    float dz = texture(uDisplacementZ, uv).r;
+    float height = texture(uDisplacementY, uv).r;
+
+    vec4 dataX = texture(uDisplacementX, uv);
+    vec4 dataZ = texture(uDisplacementZ, uv);
+
+    float choppyX = dataX.x; 
+    float choppyZ = dataZ.x;
+
+    float slopeX = dataX.z * uScale; 
+    float slopeZ = dataZ.z * uScale;
 
     vec3 newPosition = position;
 
-    newPosition.y += dy * uScale;
-    newPosition.x += dx * uScale;
-    newPosition.z += dz * uScale;
+    newPosition.y += height * uScale;
+    newPosition.x += choppyX * uScale;
+    newPosition.z += choppyZ * uScale;
+
+    vec3 analyticalNormal = normalize(vec3(-slopeX, 1.0, -slopeZ));
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
 
@@ -27,5 +37,6 @@ void main()
     vUv = uv;
     vWorldPosition = (modelMatrix * vec4(newPosition, 1.0)).xyz;
     vViewDirection = cameraPosition - vWorldPosition;
-    vHeight = dy * uScale;
+    vHeight = height * uScale;
+    vNormal = normalMatrix * analyticalNormal;
 }

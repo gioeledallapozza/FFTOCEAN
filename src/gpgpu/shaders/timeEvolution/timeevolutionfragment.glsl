@@ -7,9 +7,9 @@ precision highp float;
 
 in vec2 vUv; //Varying
 
-layout(location = 0) out vec4 outHeight; //ouput texture for height (Y)
-layout(location = 1) out vec4 outChoppyX; //ouput texture for choppy X
-layout(location = 2) out vec4 outChoppyZ; //ouput texture for choppy Z
+layout(location = 0) out vec4 outHeightJacobian; // RG = Height (Y), BA = Vuoto (Future Jacobian)
+layout(location = 1) out vec4 outAxisX;          // RG = Choppy (X), BA = Slope (X)
+layout(location = 2) out vec4 outAxisZ;          // RG = Choppy (Z), BA = Slope (Z)
 
 #include "../includes/complex.glsl"
 
@@ -35,10 +35,10 @@ void main()
     vec2 h0_t_neg = complexMultiply(h0_minus_k_conj, eulerRotationNeg);
 
     // Final resoult describes: energy, direction, phase
-    vec2 final_h0 = h0_t_pos + h0_t_neg; //Hermitian symmetry
+    vec2 finalHeight = h0_t_pos + h0_t_neg; //Hermitian symmetry
 
 
-    //CHOPPINESS
+    //WAVE VECTOR
     
     // Ricalculate k vector in pixel space (centered at zero)
     vec2 k = vec2(
@@ -51,20 +51,30 @@ void main()
     if (kLength < 0.00001) kLength = 1.0; 
     vec2 kNormal = k / kLength;
 
+    // CHOPPINESS
+
     // Rotate the height by 90 degrees (multiply by -i) to get the choppy displacement direction
-    // Formula: (a + bi) * -i = b - ai
-    vec2 h_choppy = vec2(final_h0.y, -final_h0.x);
+    // (a + bi) * -i = b - ai
+    vec2 h_choppy = vec2(finalHeight.y, -finalHeight.x);
+  
+    vec2 choppyX = h_choppy * kNormal.x;  //Choppy X
+    vec2 choppyZ = h_choppy * kNormal.y;  //Choppy Z
 
-    // Simultaneus Writing MRT
-    // Index 0 = Y (Altezza)
-    // Index 1 = X (Choppiness)
-    // Index 2 = Z (Choppiness)
+    // SLOPE (Analytics Normals)
+    
+    //Spatial derivate, multiply hieght for (i*k)
+    //(a + bi) * -i = b - ai
+    vec2 slopeX = vec2(-finalHeight.y * k.x, finalHeight.x * k.x);
+    vec2 slopeZ = vec2(-finalHeight.y * k.y, finalHeight.x * k.y);
 
-    outHeight = vec4(final_h0.x, final_h0.y, 0.0, 1.0);   //Height Y: R = REAL, G = IMG
 
-    vec2 dx = h_choppy * kNormal.x;
-    outChoppyX = vec4(dx, 0.0, 1.0); // Choppy X: R = REAL, G = IMG
 
-    vec2 dz = h_choppy * kNormal.y;
-    outChoppyZ = vec4(dz, 0.0, 1.0); // Choppy Z: R = REAL, G = IMG
+    //TEXTURE PACKING MRT
+    // Index 0 = Y (Height.xy, Jacobian.xy)
+    // Index 1 = X (ChoppinessX.xy, SlopeX.xy)
+    // Index 2 = Z (ChoppinessZ.xy, SlopeZ.xy)
+
+    outHeightJacobian = vec4(finalHeight, 0.0, 1.0); 
+    outAxisX = vec4(choppyX, slopeX);
+    outAxisZ = vec4(choppyZ, slopeZ); 
 }
