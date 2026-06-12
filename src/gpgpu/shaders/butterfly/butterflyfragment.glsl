@@ -1,12 +1,12 @@
- uniform float uStage;
- uniform float uStages;
- uniform int uDirection;
- uniform sampler2D uButterflyTexture; // RGBA = (evenIndex, oddIndex, twiddleReal, twiddleImag)
- uniform sampler2D uPingPongTextureY; // Height and JAcobian
- uniform sampler2D uPingPongTextureX; // choppy X Slop X
- uniform sampler2D uPingPongTextureZ; // choppy z Slop Z
+uniform float uStage;
+uniform float uStages;
+uniform int uDirection;
+uniform sampler2D uButterflyTexture; // RGBA = (evenIndex, oddIndex, twiddleReal, twiddleImag)
+uniform sampler2D uPingPongTextureY; // Height and JAcobian
+uniform sampler2D uPingPongTextureX; // choppy X Slop X
+uniform sampler2D uPingPongTextureZ; // choppy z Slop Z
 
- precision highp float;
+precision highp float;
 
 in vec2 vUv; //Varying
 

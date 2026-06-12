@@ -67,8 +67,6 @@ void main()
     vec2 slopeX = vec2(-finalHeight.y * k.x, finalHeight.x * k.x);
     vec2 slopeZ = vec2(-finalHeight.y * k.y, finalHeight.x * k.y);
 
-
-
     //TEXTURE PACKING MRT
     // Index 0 = Y (Height.xy, Jacobian.xy)
     // Index 1 = X (ChoppinessX.xy, SlopeX.xy)

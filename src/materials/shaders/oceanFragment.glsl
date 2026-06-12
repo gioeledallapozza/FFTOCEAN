@@ -54,12 +54,21 @@ void main()
     //NORMALS
     vec3 normal = normalize(vNormal);
 
+    // vec3 partialDx = dFdx(vWorldPosition);
+    // vec3 partialDy = dFdy(vWorldPosition);
+    // vec3 normal = normalize(cross(partialDx, partialDy)); 
+    
+    // // Assicuriamoci che la normale punti sempre verso l'alto
+    // if (normal.y < 0.0) {
+    //     normal = -normal;
+    // }
+
     //VECTORAL DIRECTIONS
     vec3 viewDirection = normalize(vViewDirection); //We need to normalize again
     vec3 lightDirection = normalize(uSunPosition);
 
     //FRESNEL
-    float fresnelFactor = calculateFresnel(viewDirection, normal, 0.02, 1.0); //F0 for water is around 0.02, F90 is 1.0
+    float fresnelFactor = calculateFresnel(viewDirection, normal, 0.02, 0.6); //F0 for water is around 0.02, F90 is 1.0
     finalColor = mix(waterColor, uSkyColor, fresnelFactor); 
 
     //SPECULAR
@@ -95,6 +104,20 @@ void main()
      
     foamMask = smoothstep(uFoamThreshold, uFoamThreshold + uFoamEdgeSoftness, foamMask); //Smoothstep for look very ripid
     finalColor = mix(finalColor, uFoamColor, foamMask);
+
+    // ==========================================
+    // TRUCCO DI DEBUG: MOSTRA LE NORMALI
+    // ==========================================
+    //De-commenta queste due righe per vedere le normali "crude"
+    
+    //  vec3 debugNormal = vNormal;
+    //  debugNormal.y = 0.0; // Zerizza la Y
+    //  debugNormal = normalize(debugNormal);
+    //  finalColor = debugNormal * 0.5 + 0.5;
+    
+    //finalColor = vec3(normal.y * 0.5 + 0.5);
+
+    // ==========================================
 
     fragColor = vec4(finalColor, 1.0);
 }
