@@ -1,18 +1,18 @@
- uniform float uStage;
- uniform float uStages;
- uniform int uDirection;
- uniform sampler2D uButterflyTexture; // RGBA = (evenIndex, oddIndex, twiddleReal, twiddleImag)
- uniform sampler2D uPingPongTextureY;
- uniform sampler2D uPingPongTextureX;
- uniform sampler2D uPingPongTextureZ;
+uniform float uStage;
+uniform float uStages;
+uniform int uDirection;
+uniform sampler2D uButterflyTexture; // RGBA = (evenIndex, oddIndex, twiddleReal, twiddleImag)
+uniform sampler2D uPingPongTextureY; // Height and JAcobian
+uniform sampler2D uPingPongTextureX; // choppy X Slop X
+uniform sampler2D uPingPongTextureZ; // choppy z Slop Z
 
- precision highp float;
+precision highp float;
 
 in vec2 vUv; //Varying
 
-layout(location = 0) out vec4 outHeight; //ouput texture for height (Y)
-layout(location = 1) out vec4 outChoppyX; //ouput texture for choppy X
-layout(location = 2) out vec4 outChoppyZ; //ouput texture for choppy Z
+layout(location = 0) out vec4 outHeightJacobian; //ouput texture for height (Y)
+layout(location = 1) out vec4 outAxisX; //ouput texture for choppy X
+layout(location = 2) out vec4 outAxisZ; //ouput texture for choppy Z
 
 #include "../includes/complex.glsl"
 
@@ -29,7 +29,7 @@ void main()
     float stageUv = (uStage + 0.5) / uStages; 
 
     // Read from texture to get the indices and twiddle factors for this stage and pixel
-    vec4 instructions = texture2D(uButterflyTexture, vec2(stageUv, pixelIndex));
+    vec4 instructions = texture(uButterflyTexture, vec2(stageUv, pixelIndex));
 
     float uEven = instructions.r;
     float uOdd = instructions.g;
@@ -50,27 +50,48 @@ void main()
     }
 
     // Retrive data 
+    //HEIGHT
     vec2 evenComplex_Y = texture(uPingPongTextureY, evenUv).rg;
     vec2 oddComplex_Y = texture(uPingPongTextureY, oddUv).rg;
 
-    vec2 evenComplex_X = texture(uPingPongTextureX, evenUv).rg;
-    vec2 oddComplex_X = texture(uPingPongTextureX, oddUv).rg;
+    // AXIS X: choppy x, slop x
+    vec4 evenData_X = texture(uPingPongTextureX, evenUv);
+    vec4 oddData_X = texture(uPingPongTextureX, oddUv);
+    
+    vec2 evenChoppy_X = evenData_X.rg;
+    vec2 oddChoppy_X = oddData_X.rg;
+    vec2 evenSlope_X = evenData_X.ba;
+    vec2 oddSlope_X = oddData_X.ba;
 
-    vec2 evenComplex_Z = texture(uPingPongTextureZ, evenUv).rg;
-    vec2 oddComplex_Z = texture(uPingPongTextureZ, oddUv).rg;
+    //AXIS Z: choppy z, slop z
+    vec4 evenData_Z = texture(uPingPongTextureZ, evenUv);
+    vec4 oddData_Z = texture(uPingPongTextureZ, oddUv);
 
-    //Rotate odd element to align with the even element
+    vec2 evenChoppy_Z = evenData_Z.rg;
+    vec2 oddChoppy_Z = oddData_Z.rg;
+    vec2 evenSlope_Z = evenData_Z.ba;
+    vec2 oddSlope_Z = oddData_Z.ba;
+
+    // APPLY ROTATION : Rotate odd element to align with the even element
     vec2 rotatedOdd_Y = complexMultiply(twiddle, oddComplex_Y);
-    vec2 rotatedOdd_X = complexMultiply(twiddle, oddComplex_X);
-    vec2 rotatedOdd_Z = complexMultiply(twiddle, oddComplex_Z);
+    
+    vec2 rotatedOddChoppy_X = complexMultiply(twiddle, oddChoppy_X);
+    vec2 rotatedOddSlope_X = complexMultiply(twiddle, oddSlope_X);
 
-    // Butterfly combine
-    vec2 result_Y = evenComplex_Y + rotatedOdd_Y; //The CPU already handled the sign for the upper/lower half 
-    vec2 result_X = evenComplex_X + rotatedOdd_X;
-    vec2 result_Z = evenComplex_Z + rotatedOdd_Z;
+    vec2 rotatedOddChoppy_Z = complexMultiply(twiddle, oddChoppy_Z);
+    vec2 rotatedOddSlope_Z = complexMultiply(twiddle, oddSlope_Z);
+    
+    // BUTTERFLY COMBINE: The CPU already handled the sign for the upper/lower half 
+    vec2 result_Y = evenComplex_Y + rotatedOdd_Y; 
+    
+    vec2 resultChoppy_X = evenChoppy_X + rotatedOddChoppy_X;
+    vec2 resultSlope_X = evenSlope_X + rotatedOddSlope_X;
 
-    //Result: processed 
-    outHeight = vec4(result_Y, 0.0, 1.0);
-    outChoppyX = vec4(result_X, 0.0, 1.0);
-    outChoppyZ = vec4(result_Z, 0.0, 1.0);
+    vec2 resultChoppy_Z = evenChoppy_Z + rotatedOddChoppy_Z;
+    vec2 resultSlope_Z = evenSlope_Z + rotatedOddSlope_Z;
+
+    //WRITE RESULT TO MRT
+    outHeightJacobian = vec4(result_Y, 0.0, 0.0);
+    outAxisX = vec4(resultChoppy_X, resultSlope_X);
+    outAxisZ = vec4(resultChoppy_Z, resultSlope_Z);
 }
