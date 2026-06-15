@@ -4,7 +4,6 @@ import * as THREE from 'three'
 import { useOceanGPGPU } from '../../../gpgpu/useOceanGPGPU.js'
 
 import '../../../materials/OceanMaterial.js'
-import { materialIOR } from 'three/tsl'
 
 export default function Ocean({
     resolution, 

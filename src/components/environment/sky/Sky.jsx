@@ -1,5 +1,4 @@
-import React, { useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useMemo } from 'react';
 import * as THREE from 'three'
 
 import '../../../materials/SkyMaterial.js';

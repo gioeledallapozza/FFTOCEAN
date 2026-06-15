@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import * as THREE from 'three';
 import { useControls, folder } from 'leva';
 import { Environment } from '@react-three/drei';
