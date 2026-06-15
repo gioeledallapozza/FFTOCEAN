@@ -2,8 +2,8 @@ import { shaderMaterial } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
 import * as THREE from 'three'
 
-import oceanVertexShader from './shaders/oceanVertex.glsl'
-import oceanFragmentShader from './shaders/oceanFragment.glsl'
+import oceanVertexShader from './shaders/ocean/oceanVertex.glsl'
+import oceanFragmentShader from './shaders/ocean/oceanFragment.glsl'
 
 // shaderMaterial( defaultUniforms, vertexShader, fragmentShader )
 const OceanMaterial = shaderMaterial(
@@ -31,8 +31,8 @@ const OceanMaterial = shaderMaterial(
         uSpecularIntensity: 2.0,
 
         // Environment
-        uSkyColor: new THREE.Color('#8cb6d9'),
-
+        uEnvMap: null,
+        
         // Subsurface Scattering (SSS)
         uWaterSSS: new THREE.Color('#43c3ab'),
         uSssPower: 5.0,
