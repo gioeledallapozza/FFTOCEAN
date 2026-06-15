@@ -9,6 +9,5 @@ export default function Experience() {
         <OrbitControls makeDefault />
 
         <OceanManager />
-        <ambientLight intensity={0.5} />
     </>
 }

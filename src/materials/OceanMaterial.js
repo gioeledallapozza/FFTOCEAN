@@ -14,6 +14,7 @@ const OceanMaterial = shaderMaterial(
         uDisplacementX: null,
         uDisplacementZ: null,
         uScale: 1.0,
+        uNormalScale: 0.0,
 
         // Basic Optics
         uWaterDeep: new THREE.Color('#002b4f'),
@@ -22,7 +23,7 @@ const OceanMaterial = shaderMaterial(
         uColorMaxHeight: 2.0,
 
         // Specular
-        uSunPosition: new THREE.Vector3(0.0, 20.0, -500.0),
+        uSunPosition: new THREE.Vector3(0.0, 0.0, -500.0),
         uSunColor: new THREE.Color('#ffe599'),
         uSpecularPower: 300.0,
         uSpecularMin: 0.4,

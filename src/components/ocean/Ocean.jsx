@@ -38,6 +38,33 @@ export default function Ocean({
         //Update texture
         const { displacementY, displacementX, displacementZ } = updateGPGPU(gl, time);
 
+
+        // TRIGGER DA CONSOLE: Scrivi window.debugGPGPU = true nella console del browser per attivarlo
+       if (window.debugGPGPU) {
+            const pixelData = new Float32Array(4); 
+            const webgl = gl.getContext();
+            
+            // ATTENZIONE QUI: Assicurati di usare il RenderTarget Z!
+            gl.setRenderTarget(displacementZ.renderTarget); 
+
+            // Leggiamo il Target 1 (dove dovrebbero risiedere Choppy Z e Slope Z)
+            webgl.readBuffer(webgl.COLOR_ATTACHMENT1); 
+
+            // Leggiamo un pixel al centro per sicurezza (se resolution è 256, metti 128)
+            webgl.readPixels(128, 128, 1, 1, webgl.RGBA, webgl.FLOAT, pixelData);
+
+            webgl.readBuffer(webgl.COLOR_ATTACHMENT0);
+            gl.setRenderTarget(null);
+
+            console.log("=== DATI MATEMATICI CRUDI TARGET 2 (ASSE Z) ===");
+            console.log("Canale R (Choppy Z):", pixelData[0]);
+            console.log("Canale G (Vuoto):",    pixelData[1]);
+            console.log("Canale B (SLOPE Z!):", pixelData[2]); 
+            console.log("Canale A (Vuoto):",    pixelData[3]);
+            
+            window.debugGPGPU = false; 
+        }
+
         if (materialRef.current) {
             materialRef.current.uTime = time;
 
@@ -46,6 +73,7 @@ export default function Ocean({
             materialRef.current.uniforms.uDisplacementX.value = displacementX;
             materialRef.current.uniforms.uDisplacementZ.value = displacementZ;
             materialRef.current.uScale = displacementScale;
+            materialRef.current.uNormalScale = optics.normalScale;
 
             //BASIC OPTICS
             materialRef.current.uniforms.uWaterDeep.value.set(optics.waterDeep);
@@ -90,8 +118,6 @@ export default function Ocean({
                     wireframe={false} 
                 />
         </mesh>
-
-        <ambientLight intensity={0.5} />
         </>
     );
 }
