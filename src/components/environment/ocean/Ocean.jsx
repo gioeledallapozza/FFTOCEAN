@@ -4,11 +4,13 @@ import * as THREE from 'three'
 import { useOceanGPGPU } from '../../../gpgpu/useOceanGPGPU.js'
 
 import '../../../materials/OceanMaterial.js'
+import { useTextures } from '../../../hooks/useTextures.js'
 
 export default function Ocean({
     resolution, 
     patchSize, 
     amplitude,
+    choppyScale,
     windSpeed, 
     windDirection,
     displacementScale,
@@ -19,6 +21,8 @@ export default function Ocean({
 
     const materialRef = useRef(); //Reference to the material of the ocean mesh
     const { scene } = useThree();
+
+    const textures = useTextures(); //Load textures
 
     const { updateGPGPU } = useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windDirection);
 
@@ -49,6 +53,7 @@ export default function Ocean({
             materialRef.current.uniforms.uDisplacementX.value = displacementX;
             materialRef.current.uniforms.uDisplacementZ.value = displacementZ;
             materialRef.current.uScale = displacementScale;
+            materialRef.current.uChoppyScale = choppyScale;
             materialRef.current.uNormalScale = optics.normalScale;
 
             //BASIC OPTICS
@@ -64,6 +69,7 @@ export default function Ocean({
             materialRef.current.uSpecularMin = optics.specularMin;
             materialRef.current.uSpecularMax = optics.specularMax;
             materialRef.current.uSpecularIntensity = optics.specularIntensity;
+            materialRef.current.uFresnelSmoothness = optics.fresnelSmoothness
 
             //ENVIRONMENT
             if (scene.environment) {
@@ -80,11 +86,13 @@ export default function Ocean({
             
             //FOAM
             materialRef.current.uniforms.uFoamColor.value.set(optics.foamColor);
+            materialRef.current.uniforms.uFoamTexture.value = textures.foam;
             materialRef.current.uFoamThreshold = optics.foamThreshold;
             materialRef.current.uFoamScale = optics.foamScale;
             materialRef.current.uniforms.uFoamSpeed.value.set(...optics.foamSpeed); 
             materialRef.current.uFoamDistortion = optics.foamDistortion;
             materialRef.current.uFoamEdgeSoftness = optics.foamEdgeSoftness;
+            materialRef.current.uFoamPower = optics.foamPower;
         }
     });
 
