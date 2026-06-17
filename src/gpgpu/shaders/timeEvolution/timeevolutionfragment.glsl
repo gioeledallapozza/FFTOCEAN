@@ -7,7 +7,7 @@ precision highp float;
 
 in vec2 vUv; //Varying
 
-layout(location = 0) out vec4 outHeightJacobian; // RG = Height (Y), BA = Vuoto (Future Jacobian)
+layout(location = 0) out vec4 outHeightJacobian; // RG = Height (Y), BA = Jacobian
 layout(location = 1) out vec4 outAxisX;          // RG = Choppy (X), BA = Slope (X)
 layout(location = 2) out vec4 outAxisZ;          // RG = Choppy (Z), BA = Slope (Z)
 
@@ -41,15 +41,21 @@ void main()
     //WAVE VECTOR
     
     // Ricalculate k vector in pixel space (centered at zero)
-    vec2 k = vec2(
-        (vUv.x - 0.5) * uResolution * (2.0 * 3.14159265 / uPatchSize),
-        (vUv.y - 0.5) * uResolution * (2.0 * 3.14159265 / uPatchSize)
-    );
+
+    // Nyquist Wrapping for calculating the coordinate of the vector
+    vec2 pixelCoord = floor(vUv * uResolution);
+    float nx = pixelCoord.x < (uResolution / 2.0) ? pixelCoord.x : pixelCoord.x - uResolution;
+    float ny = pixelCoord.y < (uResolution / 2.0) ? pixelCoord.y : pixelCoord.y - uResolution;
+
+    vec2 k = vec2(nx, ny) * (2.0 * 3.14159265 / uPatchSize);
 
     // Normalize k vector
     float kLength = length(k);
-    if (kLength < 0.00001) kLength = 1.0; 
-    vec2 kNormal = k / kLength;
+    vec2 kNormal = vec2(0.0); // Di default, nessuna direzione
+
+    if (kLength > 0.00001) {
+        kNormal = k / kLength; // Calcola la direzione solo se l'onda esiste
+    }
 
     // CHOPPINESS
 
@@ -67,12 +73,15 @@ void main()
     vec2 slopeX = vec2(-finalHeight.y * k.x, finalHeight.x * k.x);
     vec2 slopeZ = vec2(-finalHeight.y * k.y, finalHeight.x * k.y);
 
+    //JACOBIAN (APPROXIMATE)
+    vec2 jacobian = finalHeight * kLength;
+
     //TEXTURE PACKING MRT
     // Index 0 = Y (Height.xy, Jacobian.xy)
     // Index 1 = X (ChoppinessX.xy, SlopeX.xy)
     // Index 2 = Z (ChoppinessZ.xy, SlopeZ.xy)
 
-    outHeightJacobian = vec4(finalHeight, 0.0, 1.0); 
+    outHeightJacobian = vec4(finalHeight, jacobian); 
     outAxisX = vec4(choppyX, slopeX);
     outAxisZ = vec4(choppyZ, slopeZ); 
 }

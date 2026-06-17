@@ -2,13 +2,15 @@ import { useMemo, useEffect, useRef } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useOceanGPGPU } from '../../../gpgpu/useOceanGPGPU.js'
-
+import { useTextures } from '../../../helpers/useTextures.js'
+import { ClipmapGeometry } from '../../../geometry/lod/ClipmapGeometry.js'
 import '../../../materials/OceanMaterial.js'
 
 export default function Ocean({
     resolution, 
     patchSize, 
     amplitude,
+    choppyScale,
     windSpeed, 
     windDirection,
     displacementScale,
@@ -20,12 +22,24 @@ export default function Ocean({
     const materialRef = useRef(); //Reference to the material of the ocean mesh
     const { scene } = useThree();
 
+    const textures = useTextures(); //Load textures
+
     const { updateGPGPU } = useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windDirection);
 
-    //Geometry rotatio
+    //Geometry 
+    // const oceanGeometry = useMemo(() => {
+    //     const geometry = new THREE.PlaneGeometry(patchSize, patchSize, resolution, resolution);
+    //     geometry.rotateX(-Math.PI / 2); 
+    //     return geometry;
+    // }, [patchSize, resolution]);
     const oceanGeometry = useMemo(() => {
-        const geometry = new THREE.PlaneGeometry(patchSize, patchSize, resolution, resolution);
-        geometry.rotateX(-Math.PI / 2); 
+        //TODO: add to leva
+        const levels = 5; 
+        
+        //Distance from vertices
+        const baseVertexSpacing = patchSize / resolution; 
+
+        const geometry = new ClipmapGeometry(resolution, levels, baseVertexSpacing);
         return geometry;
     }, [patchSize, resolution]);
 
@@ -48,7 +62,9 @@ export default function Ocean({
             materialRef.current.uniforms.uDisplacementY.value = displacementY;
             materialRef.current.uniforms.uDisplacementX.value = displacementX;
             materialRef.current.uniforms.uDisplacementZ.value = displacementZ;
+            materialRef.current.uPatchSize = patchSize;
             materialRef.current.uScale = displacementScale;
+            materialRef.current.uChoppyScale = choppyScale;
             materialRef.current.uNormalScale = optics.normalScale;
 
             //BASIC OPTICS
@@ -64,6 +80,7 @@ export default function Ocean({
             materialRef.current.uSpecularMin = optics.specularMin;
             materialRef.current.uSpecularMax = optics.specularMax;
             materialRef.current.uSpecularIntensity = optics.specularIntensity;
+            materialRef.current.uFresnelSmoothness = optics.fresnelSmoothness
 
             //ENVIRONMENT
             if (scene.environment) {
@@ -80,11 +97,13 @@ export default function Ocean({
             
             //FOAM
             materialRef.current.uniforms.uFoamColor.value.set(optics.foamColor);
+            materialRef.current.uniforms.uFoamTexture.value = textures.foam;
             materialRef.current.uFoamThreshold = optics.foamThreshold;
             materialRef.current.uFoamScale = optics.foamScale;
             materialRef.current.uniforms.uFoamSpeed.value.set(...optics.foamSpeed); 
             materialRef.current.uFoamDistortion = optics.foamDistortion;
             materialRef.current.uFoamEdgeSoftness = optics.foamEdgeSoftness;
+            materialRef.current.uFoamPower = optics.foamPower;
         }
     });
 
@@ -94,7 +113,7 @@ export default function Ocean({
                     ref={materialRef} 
                     glslVersion={THREE.GLSL3} 
                     wireframe={false} 
-                />
+            />
         </mesh>
         </>
     );
