@@ -1,9 +1,9 @@
 import { useMemo, useEffect, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { useOceanGPGPU } from '../../gpgpu/useOceanGPGPU.js'
+import { useOceanGPGPU } from '../../../gpgpu/useOceanGPGPU.js'
 
-import '../../materials/OceanMaterial.js'
+import '../../../materials/OceanMaterial.js'
 
 export default function Ocean({
     resolution, 
@@ -12,10 +12,13 @@ export default function Ocean({
     windSpeed, 
     windDirection,
     displacementScale,
+    sunPosition,
+    sunColor,
     optics
 }) {
 
     const materialRef = useRef(); //Reference to the material of the ocean mesh
+    const { scene } = useThree();
 
     const { updateGPGPU } = useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windDirection);
 
@@ -38,33 +41,6 @@ export default function Ocean({
         //Update texture
         const { displacementY, displacementX, displacementZ } = updateGPGPU(gl, time);
 
-
-        // TRIGGER DA CONSOLE: Scrivi window.debugGPGPU = true nella console del browser per attivarlo
-       if (window.debugGPGPU) {
-            const pixelData = new Float32Array(4); 
-            const webgl = gl.getContext();
-            
-            // ATTENZIONE QUI: Assicurati di usare il RenderTarget Z!
-            gl.setRenderTarget(displacementZ.renderTarget); 
-
-            // Leggiamo il Target 1 (dove dovrebbero risiedere Choppy Z e Slope Z)
-            webgl.readBuffer(webgl.COLOR_ATTACHMENT1); 
-
-            // Leggiamo un pixel al centro per sicurezza (se resolution è 256, metti 128)
-            webgl.readPixels(128, 128, 1, 1, webgl.RGBA, webgl.FLOAT, pixelData);
-
-            webgl.readBuffer(webgl.COLOR_ATTACHMENT0);
-            gl.setRenderTarget(null);
-
-            console.log("=== DATI MATEMATICI CRUDI TARGET 2 (ASSE Z) ===");
-            console.log("Canale R (Choppy Z):", pixelData[0]);
-            console.log("Canale G (Vuoto):",    pixelData[1]);
-            console.log("Canale B (SLOPE Z!):", pixelData[2]); 
-            console.log("Canale A (Vuoto):",    pixelData[3]);
-            
-            window.debugGPGPU = false; 
-        }
-
         if (materialRef.current) {
             materialRef.current.uTime = time;
 
@@ -82,15 +58,17 @@ export default function Ocean({
             materialRef.current.uColorMaxHeight = optics.colorMaxHeight;
 
             //SPECULAR
-            materialRef.current.uniforms.uSunPosition.value.set(...optics.sunPosition);
-            materialRef.current.uniforms.uSunColor.value.set(optics.sunColor);
+            materialRef.current.uniforms.uSunPosition.value.copy(sunPosition);
+            materialRef.current.uniforms.uSunColor.value.set(sunColor);
             materialRef.current.uSpecularPower = optics.specularPower;
             materialRef.current.uSpecularMin = optics.specularMin;
             materialRef.current.uSpecularMax = optics.specularMax;
             materialRef.current.uSpecularIntensity = optics.specularIntensity;
 
             //ENVIRONMENT
-            materialRef.current.uniforms.uSkyColor.value.set(optics.skyColor);
+            if (scene.environment) {
+                materialRef.current.uniforms.uEnvMap.value = scene.environment;
+            }
 
             //SSS
             materialRef.current.uniforms.uWaterSSS.value.set(optics.waterSSS);

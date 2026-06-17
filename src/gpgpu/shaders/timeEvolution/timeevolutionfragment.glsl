@@ -7,7 +7,7 @@ precision highp float;
 
 in vec2 vUv; //Varying
 
-layout(location = 0) out vec4 outHeightJacobian; // RG = Height (Y), BA = Vuoto (Future Jacobian)
+layout(location = 0) out vec4 outHeightJacobian; // RG = Height (Y), BA = Jacobian
 layout(location = 1) out vec4 outAxisX;          // RG = Choppy (X), BA = Slope (X)
 layout(location = 2) out vec4 outAxisZ;          // RG = Choppy (Z), BA = Slope (Z)
 
@@ -67,12 +67,15 @@ void main()
     vec2 slopeX = vec2(-finalHeight.y * k.x, finalHeight.x * k.x);
     vec2 slopeZ = vec2(-finalHeight.y * k.y, finalHeight.x * k.y);
 
+    //JACOBIAN (APPROXIMATE)
+    vec2 jacobian = -finalHeight * kLength;
+
     //TEXTURE PACKING MRT
     // Index 0 = Y (Height.xy, Jacobian.xy)
     // Index 1 = X (ChoppinessX.xy, SlopeX.xy)
     // Index 2 = Z (ChoppinessZ.xy, SlopeZ.xy)
 
-    outHeightJacobian = vec4(finalHeight, 0.0, 1.0); 
+    outHeightJacobian = vec4(finalHeight, jacobian); 
     outAxisX = vec4(choppyX, slopeX);
     outAxisZ = vec4(choppyZ, slopeZ); 
 }

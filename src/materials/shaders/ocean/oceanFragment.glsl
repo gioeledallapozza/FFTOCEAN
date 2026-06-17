@@ -16,7 +16,7 @@ uniform float uSpecularMin;
 uniform float uSpecularMax;
 uniform float uSpecularIntensity;
 
-uniform vec3 uSkyColor;
+uniform samplerCube uEnvMap;
 
 uniform vec3 uWaterSSS;
 uniform float uSssPower;
@@ -41,44 +41,20 @@ in vec3 vNormal;
 
 out vec4 fragColor;
 
-#include ./includes/fresnel.glsl
+#include ../includes/fresnel.glsl
 
 void main()
 {  
-    //BASIC COLOR
-    float heightMask = smoothstep(uColorMinHeight, uColorMaxHeight, vHeight);
-    vec3 waterColor = mix(uWaterDeep, uWaterShallow, heightMask);
-
-    vec3 finalColor = waterColor; //Initalize final color
-
-    //NORMALS
+    //NORMALS AND VECTORAL DIRECTIONS
     vec3 normal = normalize(vNormal);
-
-    // vec3 partialDx = dFdx(vWorldPosition);
-    // vec3 partialDy = dFdy(vWorldPosition);
-    // vec3 normal = normalize(cross(partialDx, partialDy)); 
-    
-    // // Assicuriamoci che la normale punti sempre verso l'alto
-    // if (normal.y < 0.0) {
-    //     normal = -normal;
-    // }
-
-    //VECTORAL DIRECTIONS
     vec3 viewDirection = normalize(vViewDirection); //We need to normalize again
     vec3 lightDirection = normalize(uSunPosition);
 
-    //FRESNEL
-    float fresnelFactor = calculateFresnel(viewDirection, normal, 0.02, 0.6); //F0 for water is around 0.02, F90 is 1.0
-    finalColor = mix(waterColor, uSkyColor, fresnelFactor); 
+    //UNDERWATER COLOR
+    float heightMask = smoothstep(uColorMinHeight, uColorMaxHeight, vHeight);
+    vec3 baseWaterColor = mix(uWaterDeep, uWaterShallow, heightMask);
 
-    //SPECULAR
-    vec3 halfVector = normalize(lightDirection + viewDirection); //Calculate half vector for specular highlights
-    float specular = pow(max(dot(halfVector, normal), 0.0), uSpecularPower);
-    specular = smoothstep(uSpecularMin, uSpecularMax, specular);
-
-    vec3 specularColor = uSunColor * specular * uSpecularIntensity; 
-
-    ///SUBSURFACE SCATTERING (SSS)
+    // SUBSURFACE SCATTERING (SSS)
     float sssAlignment = max(0.0, dot(viewDirection, -lightDirection)); //Opposite direction of the sun. 
     float sssTerm = pow(sssAlignment, uSssPower) * uSssScale;  //Elevate and scale
     
@@ -88,9 +64,25 @@ void main()
 
     vec3 sssColor = uWaterSSS * sssTerm * sssMask;
 
-    //COMBINE
-    finalColor += specularColor;
-    finalColor += sssColor;
+    vec3 waterInside = baseWaterColor + sssColor; //INTERNAL COLOR
+
+    //SURFACE COLOR
+    //EnvMap reflection
+    vec3 reflectionVector = reflect(-viewDirection, normal);   //calculate rebound angle  
+    vec3 envReflection = textureLod(uEnvMap, reflectionVector, 1.5).rgb;
+
+    // SPECUALR (STYLEZED)
+    vec3 halfVector = normalize(lightDirection + viewDirection); //Calculate half vector for specular highlights
+    float specularTerm = pow(max(dot(halfVector, normal), 0.0), uSpecularPower); 
+    float sunPathMask = smoothstep(uSpecularMin, uSpecularMax, specularTerm); 
+    vec3 directSpecular = uSunColor * sunPathMask * uSpecularIntensity;
+
+    vec3 surfaceReflection = envReflection + directSpecular;
+
+    //FRESNEL
+    float fresnelFactor = calculateFresnel(viewDirection, normal, 0.02, 0.5); //F0 for water is around 0.02, F90 is 1.0
+    vec3 finalColor = mix(waterInside, surfaceReflection, fresnelFactor);
+    finalColor = clamp(finalColor, 0.0, 1.0);
 
     //FOAM
     vec2 foamUv = vUv * uFoamScale; // Texture Scale
@@ -104,20 +96,6 @@ void main()
      
     foamMask = smoothstep(uFoamThreshold, uFoamThreshold + uFoamEdgeSoftness, foamMask); //Smoothstep for look very ripid
     finalColor = mix(finalColor, uFoamColor, foamMask);
-
-    // ==========================================
-    // TRUCCO DI DEBUG: MOSTRA LE NORMALI
-    // ==========================================
-    //De-commenta queste due righe per vedere le normali "crude"
-    
-    //  vec3 debugNormal = vNormal;
-    //  debugNormal.y = 0.0; // Zerizza la Y
-    //  debugNormal = normalize(debugNormal);
-    //  finalColor = debugNormal * 0.5 + 0.5;
-    
-    //finalColor = vec3(normal.y * 0.5 + 0.5);
-
-    // ==========================================
 
     fragColor = vec4(finalColor, 1.0);
 }
