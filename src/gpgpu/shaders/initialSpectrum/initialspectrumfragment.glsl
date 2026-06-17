@@ -70,7 +70,12 @@ void main()
         vec2 gauss = gaussianRandom(vUv);
 
         float energySqrt = sqrt(phillipsEnergy * dk * dk);
-        float constant = energySqrt * sqrt(0.5);
+        
+        //gaussian filter
+        float highFreqFilter = exp(-kMagnitude * kMagnitude * 0.1); 
+
+        //calculate the final constant of the wave
+        float constant = energySqrt * 0.70710678 * highFreqFilter; // 0.70710678 is sqrt(0.5)
 
         h0 = vec2(gauss.x * constant, gauss.y * constant);
     }
