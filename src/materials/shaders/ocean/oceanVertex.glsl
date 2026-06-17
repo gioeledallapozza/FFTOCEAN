@@ -2,6 +2,7 @@ uniform sampler2D uDisplacementY; //Height Y, FUTURE JACOBIAN TODO
 uniform sampler2D uDisplacementX; //Choppy X, Slope X
 uniform sampler2D uDisplacementZ; //Choppy Z, Slope Z
 uniform float uScale;
+uniform float uPatchSize;
 
 uniform float uNormalScale;
 uniform float uChoppyScale;
@@ -15,11 +16,14 @@ out float vJacobian;
 
 void main()
 {
-    // Read X,Y,Z displacements 
-    float height = texture(uDisplacementY, uv).r;
+    vec3 worldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+    vec2 fftUv = worldPos.xz / uPatchSize;
 
-    vec4 dataX = texture(uDisplacementX, uv);
-    vec4 dataZ = texture(uDisplacementZ, uv);
+    // Read X,Y,Z displacements 
+    float height = texture(uDisplacementY, fftUv).r;
+
+    vec4 dataX = texture(uDisplacementX, fftUv);
+    vec4 dataZ = texture(uDisplacementZ, fftUv);
 
     float choppyX = dataX.x; 
     float choppyZ = dataZ.x;
@@ -36,16 +40,16 @@ void main()
     float actualSlopeX = slopeX * uScale * uNormalScale;
     float actualSlopeZ = slopeZ * uScale * uNormalScale;
 
-    vec3 mathNormal = vec3(-actualSlopeX, 1.0, actualSlopeZ);
+    vec3 mathNormal = vec3(-actualSlopeX, 1.0, -actualSlopeZ);
     vec3 worldNormal = normalize(mat3(modelMatrix) * mathNormal);
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
 
     //Varyings
-    vUv = uv;
+    vUv = fftUv;
     vWorldPosition = (modelMatrix * vec4(newPosition, 1.0)).xyz;
     vViewDirection = normalize(cameraPosition - vWorldPosition);
     vHeight = height * uScale;
     vNormal = normalize(worldNormal);
-    vJacobian = texture(uDisplacementY, vUv).b; //Pass the jacobian so it can be interpolated
+    vJacobian = texture(uDisplacementY, fftUv).b; //Pass the jacobian so it can be interpolated
 }

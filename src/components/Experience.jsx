@@ -28,6 +28,6 @@ export default function Experience(){
 
         <EnvironmentManager />
 
-        <gridHelper args={[1000, 100, '#444444', '#222222']} position={[0, -1, 0]} />
+        {/* <gridHelper args={[1000, 100, '#444444', '#222222']} position={[0, -1, 0]} /> */}
     </>
 }

@@ -2,9 +2,9 @@ import { useMemo, useEffect, useRef } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useOceanGPGPU } from '../../../gpgpu/useOceanGPGPU.js'
-
+import { useTextures } from '../../../helpers/useTextures.js'
+import { ClipmapGeometry } from '../../../geometry/lod/ClipmapGeometry.js'
 import '../../../materials/OceanMaterial.js'
-import { useTextures } from '../../../hooks/useTextures.js'
 
 export default function Ocean({
     resolution, 
@@ -26,10 +26,20 @@ export default function Ocean({
 
     const { updateGPGPU } = useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windDirection);
 
-    //Geometry rotatio
+    //Geometry 
+    // const oceanGeometry = useMemo(() => {
+    //     const geometry = new THREE.PlaneGeometry(patchSize, patchSize, resolution, resolution);
+    //     geometry.rotateX(-Math.PI / 2); 
+    //     return geometry;
+    // }, [patchSize, resolution]);
     const oceanGeometry = useMemo(() => {
-        const geometry = new THREE.PlaneGeometry(patchSize, patchSize, resolution, resolution);
-        geometry.rotateX(-Math.PI / 2); 
+        //TODO: add to leva
+        const levels = 5; 
+        
+        //Distance from vertices
+        const baseVertexSpacing = patchSize / resolution; 
+
+        const geometry = new ClipmapGeometry(resolution, levels, baseVertexSpacing);
         return geometry;
     }, [patchSize, resolution]);
 
@@ -52,6 +62,7 @@ export default function Ocean({
             materialRef.current.uniforms.uDisplacementY.value = displacementY;
             materialRef.current.uniforms.uDisplacementX.value = displacementX;
             materialRef.current.uniforms.uDisplacementZ.value = displacementZ;
+            materialRef.current.uPatchSize = patchSize;
             materialRef.current.uScale = displacementScale;
             materialRef.current.uChoppyScale = choppyScale;
             materialRef.current.uNormalScale = optics.normalScale;
@@ -102,7 +113,7 @@ export default function Ocean({
                     ref={materialRef} 
                     glslVersion={THREE.GLSL3} 
                     wireframe={false} 
-                />
+            />
         </mesh>
         </>
     );

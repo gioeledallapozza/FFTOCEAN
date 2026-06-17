@@ -13,6 +13,7 @@ const OceanMaterial = shaderMaterial(
         uDisplacementY: null,
         uDisplacementX: null,
         uDisplacementZ: null,
+        uPatchSize: 250,
         uScale: 1.0,
         uChoppyScale: 2.0,
         uNormalScale: 0.0,

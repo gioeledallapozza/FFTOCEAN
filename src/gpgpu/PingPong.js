@@ -10,7 +10,9 @@ export default class PingPong {
       depthBuffer: false, //we don't need depth calculation
       stencilBuffer: false, //we don't need stencil calculation
       generateMipmaps: false,
-      count: 3 //MRT activation for 3 textures (Y,X,Z) in the same shader pass
+      count: 3, //MRT activation for 3 textures (Y,X,Z) in the same shader pass
+      wrapS: THREE.RepeatWrapping,
+      wrapT: THREE.RepeatWrapping
     };
     
     //WebGL2
