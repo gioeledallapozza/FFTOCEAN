@@ -60,7 +60,7 @@ export default function OceanManager({sunPosition, sunColor}) {
             sssScale: { value: 2.0, min: 0.0, max: 5.0, step: 0.1 },
             sssMinHeight: { value: -0.2, min: -2.0, max: 2.0, step: 0.01 },
             sssMaxHeight: { value: 1.0, min: -2.0, max: 5.0, step: 0.01 },
-            sssWrap: { value: 0.2, min: 0.0, max: 1.0, step: 0.01 }
+            sssWrap: { value: 0.38, min: 0.0, max: 1.0, step: 0.01 }
         }, { collapsed: true }),
         
         // Foam

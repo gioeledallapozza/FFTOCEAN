@@ -50,9 +50,14 @@ void main()
     }
 
     // Retrive data 
-    //HEIGHT
-    vec2 evenComplex_Y = texture(uPingPongTextureY, evenUv).rg;
-    vec2 oddComplex_Y = texture(uPingPongTextureY, oddUv).rg;
+    //HEIGHT AND JACOBIAN
+    vec4 evenData_Y = texture(uPingPongTextureY, evenUv);
+    vec4 oddData_Y = texture(uPingPongTextureY, oddUv);
+
+    vec2 evenComplex_Y = evenData_Y.rg;
+    vec2 oddComplex_Y = oddData_Y.rg;
+    vec2 evenJacobian = evenData_Y.ba;
+    vec2 oddJacobian = oddData_Y.ba;
 
     // AXIS X: choppy x, slop x
     vec4 evenData_X = texture(uPingPongTextureX, evenUv);
@@ -74,7 +79,8 @@ void main()
 
     // APPLY ROTATION : Rotate odd element to align with the even element
     vec2 rotatedOdd_Y = complexMultiply(twiddle, oddComplex_Y);
-    
+    vec2 rotatedOddJacobian = complexMultiply(twiddle, oddJacobian);
+
     vec2 rotatedOddChoppy_X = complexMultiply(twiddle, oddChoppy_X);
     vec2 rotatedOddSlope_X = complexMultiply(twiddle, oddSlope_X);
 
@@ -83,6 +89,7 @@ void main()
     
     // BUTTERFLY COMBINE: The CPU already handled the sign for the upper/lower half 
     vec2 result_Y = evenComplex_Y + rotatedOdd_Y; 
+    vec2 resultJacobian = evenJacobian + rotatedOddJacobian;
     
     vec2 resultChoppy_X = evenChoppy_X + rotatedOddChoppy_X;
     vec2 resultSlope_X = evenSlope_X + rotatedOddSlope_X;
@@ -91,7 +98,7 @@ void main()
     vec2 resultSlope_Z = evenSlope_Z + rotatedOddSlope_Z;
 
     //WRITE RESULT TO MRT
-    outHeightJacobian = vec4(result_Y, 0.0, 0.0);
+    outHeightJacobian = vec4(result_Y, resultJacobian);
     outAxisX = vec4(resultChoppy_X, resultSlope_X);
     outAxisZ = vec4(resultChoppy_Z, resultSlope_Z);
 }
