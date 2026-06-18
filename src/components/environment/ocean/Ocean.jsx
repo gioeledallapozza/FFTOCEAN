@@ -9,6 +9,7 @@ import '../../../materials/OceanMaterial.js'
 
 export default function Ocean({
     resolution, 
+    fftResolution,
     patchSize, 
     amplitude,
     choppyScale,
@@ -22,22 +23,23 @@ export default function Ocean({
 
     const materialRef = useRef();   //Reference to the material of the ocean mesh
     const meshRef = useRef();       // Reference to the clipmap mesh
-
+    const gpgpuTimer = useRef(0.0); // Accumulator for throttling
+    
     const { scene } = useThree();
 
     const textures = useTextures(); //Load textures
     useOceanLOD(meshRef, materialRef); //Call the LOD
-    const { updateGPGPU } = useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windDirection);
+    const { updateGPGPU } = useOceanGPGPU(fftResolution, patchSize, amplitude, windSpeed, windDirection);
 
-    //Geometry 
-    // const oceanGeometry = useMemo(() => {
-    //     const geometry = new THREE.PlaneGeometry(patchSize, patchSize, resolution, resolution);
-    //     geometry.rotateX(-Math.PI / 2); 
-    //     return geometry;
-    // }, [patchSize, resolution]);
+    useEffect(() => {
+        // Force the execution of the FFT calculation
+        gpgpuTimer.current = 100.0; 
+    }, [fftResolution, patchSize, amplitude, windSpeed, windDirection]);
+
+    //Geometry
     const oceanGeometry = useMemo(() => {
         //TODO: add to leva
-        const levels = 6; 
+        const levels = 5; 
         
         //Distance from vertices
         const baseVertexSpacing = patchSize / resolution; 
@@ -53,18 +55,11 @@ export default function Ocean({
         };
     }, [oceanGeometry]);
 
-    useFrame(({ gl, clock }) => {
+    useFrame(({ gl, clock }, delta) => {
         const time = clock.getElapsedTime();
-        //Update texture
-        const { displacementY, displacementX, displacementZ } = updateGPGPU(gl, time);
 
         if (materialRef.current) {
             materialRef.current.uTime = time;
-
-            // TEXTURE DISPLACEMENT
-            materialRef.current.uniforms.uDisplacementY.value = displacementY;
-            materialRef.current.uniforms.uDisplacementX.value = displacementX;
-            materialRef.current.uniforms.uDisplacementZ.value = displacementZ;
 
             // GEOMETRY PROPERTIES
             materialRef.current.uResolution = resolution;
@@ -111,6 +106,26 @@ export default function Ocean({
             materialRef.current.uFoamDistortion = optics.foamDistortion;
             materialRef.current.uFoamEdgeSoftness = optics.foamEdgeSoftness;
             materialRef.current.uFoamPower = optics.foamPower;
+        }
+
+        //GPGPU Physics
+        //Throttled at 30 FPS
+        gpgpuTimer.current += delta;
+        const GPGPU_INTERVAL = 1.0 / 30.0; //30 FPS
+
+        if (gpgpuTimer.current >= GPGPU_INTERVAL) {
+            //Update texture
+            const { displacementY, displacementX, displacementZ } = updateGPGPU(gl, time);
+
+            if (materialRef.current) {
+                // TEXTURE DISPLACEMENT
+                materialRef.current.uniforms.uDisplacementY.value = displacementY;
+                materialRef.current.uniforms.uDisplacementX.value = displacementX;
+                materialRef.current.uniforms.uDisplacementZ.value = displacementZ;
+            }
+
+            // Keeps the temporal remainder
+            gpgpuTimer.current = gpgpuTimer.current % GPGPU_INTERVAL;
         }
     });
 

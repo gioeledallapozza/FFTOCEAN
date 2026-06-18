@@ -3,10 +3,18 @@ import * as THREE from 'three'
 import { useControls, folder } from 'leva'
 import Ocean from './Ocean.jsx'
 
+//Get screen size
+const getInitialFftResolution = () => {
+    if (typeof window !== 'undefined') {
+        return window.innerWidth <= 768 ? 128 : 256;
+    }
+    return 256;
+};
+
 export default function OceanManager({sunPosition, sunColor}) {
     
     // Ocean parameters
-    const { resolution, patchSize, displacementScale, amplitude, choppyScale } = useControls('Ocean Core', {
+    const { resolution, fftResolution, patchSize, displacementScale, amplitude, choppyScale } = useControls('Ocean Core', {
         resolution: { 
             options: { 
                 '64 (Low)': 64, 
@@ -15,9 +23,19 @@ export default function OceanManager({sunPosition, sunColor}) {
                 '512 (Ultra)': 512,
                 '1024 (Death)': 1024
             }, value: 256 },
+        fftResolution: { 
+            options: { 
+                '64 (Low)': 64, 
+                '128 (Med)': 128, 
+                '256 (High)': 256, 
+                '512 (Ultra)': 512,
+                '1024 (Death)': 1024 
+            }, 
+            value: getInitialFftResolution() 
+        },
         patchSize: {  value: 250.0, min: 100.0, max: 10000.0, step: 100.0 },
         displacementScale: { value: 1.0, min: 0.1, max: 1.5, step: 0.1 },
-        amplitude: { value: 0.01, min: 0.0000001, max: 0.05, step: 0.001 },
+        amplitude: { value: 0.01, min: 0.0000001, max: 0.15, step: 0.001 },
         choppyScale: { value: 1.5, min: 0.0, max: 15.0, step: 0.01}
     }, { collapsed: true });
 
@@ -79,7 +97,9 @@ export default function OceanManager({sunPosition, sunColor}) {
 
     return (
         <Ocean 
+            key={`ocean-core-${resolution}-${fftResolution}`}
             resolution={resolution}
+            fftResolution={fftResolution}
             patchSize={patchSize}
             amplitude={amplitude}
             choppyScale={choppyScale}
