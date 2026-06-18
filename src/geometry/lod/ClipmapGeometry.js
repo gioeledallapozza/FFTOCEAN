@@ -40,7 +40,7 @@ export class ClipmapGeometry extends THREE.BufferGeometry {
         // Calculate vertices
         for (let L = 0; L <= levels; L++) {
             vMap[L] = new Array(m + 1);
-            const step = baseVertexSpacing * Math.pow(2, L);
+            const step = baseVertexSpacing * Math.pow(2, L); //Every time the distance id double the previous
             const startPos = - (m * step) / 2;
 
             for (let z = 0; z <= m; z++) {
@@ -56,7 +56,7 @@ export class ClipmapGeometry extends THREE.BufferGeometry {
                     const posZ = startPos + z * step;
 
                     positions[vIndex * 3]     = posX;
-                    positions[vIndex * 3 + 1] = 0.0; // Geometria piatta, Y=0 (GPGPU alzerà i vertici)
+                    positions[vIndex * 3 + 1] = 0.0; // Plane geometry
                     positions[vIndex * 3 + 2] = posZ;
 
                     // UV basate sulle coordinate locali per semplificare i lookup in world-space nei vertex shader

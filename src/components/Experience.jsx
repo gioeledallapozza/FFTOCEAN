@@ -10,7 +10,7 @@ export default function Experience(){
 
     useEffect(() => {
         if (controlsRef.current) {
-            controlsRef.current.target.set(-50, 0, -100); //Look in the distance
+            controlsRef.current.target.set(0, 0, 0); //Look in the distance -50,0,-100
             controlsRef.current.update();
         }
     }, []);

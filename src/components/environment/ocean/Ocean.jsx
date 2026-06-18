@@ -3,6 +3,7 @@ import { useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useOceanGPGPU } from '../../../gpgpu/useOceanGPGPU.js'
 import { useTextures } from '../../../helpers/useTextures.js'
+import { useOceanLOD } from '../../../geometry/lod/useOceanLOD.js'
 import { ClipmapGeometry } from '../../../geometry/lod/ClipmapGeometry.js'
 import '../../../materials/OceanMaterial.js'
 
@@ -19,11 +20,13 @@ export default function Ocean({
     optics
 }) {
 
-    const materialRef = useRef(); //Reference to the material of the ocean mesh
+    const materialRef = useRef();   //Reference to the material of the ocean mesh
+    const meshRef = useRef();       // Reference to the clipmap mesh
+
     const { scene } = useThree();
 
     const textures = useTextures(); //Load textures
-
+    useOceanLOD(meshRef, materialRef); //Call the LOD
     const { updateGPGPU } = useOceanGPGPU(resolution, patchSize, amplitude, windSpeed, windDirection);
 
     //Geometry 
@@ -34,7 +37,7 @@ export default function Ocean({
     // }, [patchSize, resolution]);
     const oceanGeometry = useMemo(() => {
         //TODO: add to leva
-        const levels = 5; 
+        const levels = 6; 
         
         //Distance from vertices
         const baseVertexSpacing = patchSize / resolution; 
@@ -62,6 +65,10 @@ export default function Ocean({
             materialRef.current.uniforms.uDisplacementY.value = displacementY;
             materialRef.current.uniforms.uDisplacementX.value = displacementX;
             materialRef.current.uniforms.uDisplacementZ.value = displacementZ;
+
+            // GEOMETRY PROPERTIES
+            materialRef.current.uResolution = resolution;
+            materialRef.current.uBaseVertexSpacing = patchSize / resolution;
             materialRef.current.uPatchSize = patchSize;
             materialRef.current.uScale = displacementScale;
             materialRef.current.uChoppyScale = choppyScale;
@@ -108,7 +115,7 @@ export default function Ocean({
     });
 
     return (<>
-        <mesh geometry={oceanGeometry}>
+        <mesh ref={meshRef} geometry={oceanGeometry}>
             <oceanMaterial 
                     ref={materialRef} 
                     glslVersion={THREE.GLSL3} 

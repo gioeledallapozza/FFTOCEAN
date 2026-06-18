@@ -8,7 +8,7 @@ export default function App() {
     <>
       <Leva collapsed={true} />
       <Canvas className='webgl'
-        camera = { { position: [ 200, 120, 400 ], fov: 45, far: 10000 } }
+        camera = { { position: [ 0, 40, 200 ], fov: 45, far: 10000 } }
         dpr = { [ 1, 1.5 ] }
         gl = { { antialias: false } }
       >

@@ -13,7 +13,12 @@ const OceanMaterial = shaderMaterial(
         uDisplacementY: null,
         uDisplacementX: null,
         uDisplacementZ: null,
+
+        //Geometry properties
         uPatchSize: 250,
+        uViewerPos: new THREE.Vector2(0.0, 0.0),
+        uResolution: 256.0,
+        uBaseVertexSpacing: 1.0,
         uScale: 1.0,
         uChoppyScale: 2.0,
         uNormalScale: 0.0,
