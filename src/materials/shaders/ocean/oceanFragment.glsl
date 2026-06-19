@@ -85,6 +85,9 @@ void main()
     vec3 baseWaterColor = mix(uWaterDeep, uWaterShallow, heightMask);
 
     // SUBSURFACE SCATTERING (SSS)
+    float sunGlowRadiusY = sqrt(max(0.0, 1.0 - uSunGlowSize * uSunGlowSize));
+    float sunElevationMask = smoothstep(-sunGlowRadiusY, sunGlowRadiusY, lightDirection.y);
+
     float sssAlignment = max(0.0, dot(viewDirection, -lightDirection)); //Opposite direction of the sun. 
     float sssTerm = pow(sssAlignment, uSssPower) * uSssScale;  //Elevate and scale
     
@@ -92,7 +95,7 @@ void main()
     float sssLightEmmission = max(0.0, dot(normal, -lightDirection) + uSssWrap); //calculate if the sun is pointing to the back of the wave
     sssMask *= sssLightEmmission; //multiply for enveloping lighting
 
-    vec3 sssColor = uWaterSSS * sssTerm * sssMask;
+    vec3 sssColor = uWaterSSS * sssTerm * sssMask * sunElevationMask;
 
     vec3 waterInside = baseWaterColor + sssColor; //INTERNAL COLOR
 
