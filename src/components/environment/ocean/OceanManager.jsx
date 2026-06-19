@@ -11,7 +11,7 @@ const getInitialFftResolution = () => {
     return 256;
 };
 
-export default function OceanManager({sunPosition, sunColor, fogColor, turbidity, sunGlowSize }) {
+export default function OceanManager({sunPosition, sunColor, fogColor, turbidity, sunGlowSize, sunDiskSize, sunDiskIntensity, sunGlowIntensity }) {
     
     // Ocean parameters
     const { resolution, fftResolution, patchSize, displacementScale, amplitude, choppyScale } = useControls('Ocean Core', {
@@ -117,6 +117,9 @@ export default function OceanManager({sunPosition, sunColor, fogColor, turbidity
             fogColor={fogColor}
             turbidity={turbidity}
             sunGlowSize={sunGlowSize}
+            sunDiskSize={sunDiskSize}
+            sunDiskIntensity={sunDiskIntensity}
+            sunGlowIntensity={sunGlowIntensity}
             optics={opticsControls}
         />
     )

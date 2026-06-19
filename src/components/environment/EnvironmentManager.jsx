@@ -7,8 +7,8 @@ import SkyManager from './sky/SkyManager';
 
 export default function EnvironmentManager() {
 
-    //Global variables
-    const { sunDistance, sunTheta, sunPhi, sunColor, topColor, bottomColor, turbidity, sunGlowSize } = useControls('Global Environment', {
+    //Global variables  
+    const { sunDistance, sunTheta, sunPhi, sunColor, topColor, bottomColor, turbidity, sunGlowSize, sunDiskSize, sunDiskIntensity, sunGlowIntensity } = useControls('Global Environment', {
         Sun: folder({
             sunDistance: { value: 500.0, min: 100.0, max: 2000.0, step: 10.0 },
             sunTheta: { value: 1.44, min: 0, max: Math.PI, step: 0.01 }, 
@@ -16,6 +16,9 @@ export default function EnvironmentManager() {
             sunColor: { value: '#ffdf70' },
             turbidity: { value: 6.0, min: 0.1, max: 20, step: 0.1 },
             sunGlowSize: { value: 0.999, min: 0.900, max: 0.9999, step: 0.0001 },
+            sunDiskSize: { value: 0.9999, min: 0.9800, max: 0.99999, step: 0.00001 },
+            sunDiskIntensity: { value: 1.5, min: 0.0, max: 10.0, step: 0.1 },
+            sunGlowIntensity: { value: 4.5, min: 0.0, max: 5.0, step: 0.1 },
         }),
         Sky: folder({
             topColor: { value: '#064289' },
@@ -46,20 +49,20 @@ export default function EnvironmentManager() {
                     bottomColor={bottomColor}
                     turbidity={turbidity}
                     sunGlowSize={sunGlowSize}
+                    sunDiskSize={sunDiskSize}
+                    sunDiskIntensity={sunDiskIntensity}
+                    sunGlowIntensity={sunGlowIntensity}
                 />
             </Environment>
-            {/* <SkyManager 
-                sunPosition={globalSunPosition} 
-                sunColor={globalSunColor}
-                topColor={topColor}
-                bottomColor={bottomColor}
-            /> */}
             <OceanManager 
                 sunPosition={globalSunPosition} 
                 sunColor={globalSunColor} 
                 fogColor={bottomColor}
                 turbidity={turbidity}
                 sunGlowSize={sunGlowSize}
+                sunDiskSize={sunDiskSize}
+                sunDiskIntensity={sunDiskIntensity}
+                sunGlowIntensity={sunGlowIntensity}
             />
         </>
     );

@@ -43,6 +43,10 @@ uniform float uFogDensity;
 uniform float uFogSunScattering;
 uniform float uTurbidity;
 uniform float uGlowSize;
+uniform float uSunDiskSize;
+uniform float uSunGlowSize;
+uniform float uSunDiskIntensity;
+uniform float uSunGlowIntensity;
 
 //Varying
 in vec2 vUv; 
@@ -138,14 +142,19 @@ void main()
     // FOG & ATMOSPHERIC SCATTERING
     float fogFactor = clamp(1.0 - exp(-pow(dist * uFogDensity, 2.0)), 0.0, 1.0); //exponential decay
     vec3 rayDirection = -viewDirection;
+
+    //same logic as SKY
     float sunDot = dot(rayDirection, normalize(uSunPosition));
+    float sunDisk = smoothstep(uSunDiskSize, 1.0, sunDot); 
+    float dynamicGlowSize = uSunGlowSize - (uTurbidity * 0.002);
+    float sunGlow = smoothstep(dynamicGlowSize, 1.0, sunDot); 
+
+    float dynamicDiskIntensity = uSunDiskIntensity / (1.0 + (uTurbidity * 0.1));
     
-    // In-Scattering (sun aura)
-    float inScattering = smoothstep(0.992, 1.0, sunDot); //Uniform in future
-    // float dynamicInScatteringSize = uGlowSize - (uTurbidity * 0.002);
-    // float inScattering = smoothstep(dynamicInScatteringSize, 1.0, sunDot);
-    vec3 dynamicFogColor = mix(uFogColor, uSunColor, inScattering * 0.3) + (uSunColor * inScattering * uFogSunScattering);
-    
+    vec3 dynamicFogColor = uFogColor + //here change with fogcolor not skycolor
+                           (uSunColor * sunGlow * uSunGlowIntensity) + 
+                           (uSunColor * sunDisk * dynamicDiskIntensity);
+                           
     finalColor = mix(finalColor, dynamicFogColor, fogFactor);
 
     // FINAL COLOR

@@ -66,6 +66,11 @@ const OceanMaterial = shaderMaterial(
         uFogColor: new THREE.Color('#ffffff'),
         uFogDensity: 0.0005,
         uFogSunScattering: 0.5,
+        uTurbidity: 6.0,
+        uSunDiskSize: 0.9995,
+        uSunGlowSize: 0.98,
+        uSunDiskIntensity: 2.0,
+        uSunGlowIntensity: 0.8,
     },
     oceanVertexShader,
     oceanFragmentShader

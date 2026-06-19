@@ -1,22 +1,14 @@
 import { useControls, folder } from 'leva';
 import Sky from './Sky';
 
-export default function SkyManager({sunPosition, sunColor, topColor, bottomColor, turbidity, sunGlowSize}) {
+export default function SkyManager({sunPosition, sunColor, topColor, bottomColor, turbidity, sunGlowSize, sunDiskSize, sunDiskIntensity, sunGlowIntensity}) {
 
     const { 
-        rayleigh, 
-        sunDiskSize, 
-        sunDiskIntensity, 
-        sunGlowIntensity,
+        rayleigh,
     } = useControls('Sky', {
         Atmosphere: folder({
             rayleigh: { value: 1.2, min: 0, max: 4, step: 0.1 },
         }),
-        SunStyle: folder({
-            sunDiskSize: { value: 0.9999, min: 0.9800, max: 0.99999, step: 0.00001 },
-            sunDiskIntensity: { value: 1.5, min: 0.0, max: 10.0, step: 0.1 },
-            sunGlowIntensity: { value: 4.5, min: 0.0, max: 5.0, step: 0.1 },
-        })
     }, { collapsed: true });
 
     return (

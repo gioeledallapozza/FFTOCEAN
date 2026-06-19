@@ -28,11 +28,11 @@ void main() {
     //Sun
     float sunDot = dot(viewDirection, sunDirection); // Are we looking at the sun?
     float sunDisk = smoothstep(uSunDiskSize, 1.0, sunDot); // Sun nucleus size
-    float dynamicGlowSize = uSunGlowSize - (uTurbidity * 0.002);
+    float dynamicGlowSize = uSunGlowSize - (uTurbidity * 0.002); //The more turbidity there is in the air, the more photons bounce off it.
     float sunGlow = smoothstep(dynamicGlowSize, 1.0, sunDot); // Sun glow falloff
 
     float dynamicDiskIntensity = uSunDiskIntensity / (1.0 + (uTurbidity * 0.1));
-
+    //Additive blending so the kernel is lighter
     vec3 finalColor = skyColor + 
                      (uSunColor * sunGlow * uSunGlowIntensity) + 
                      (uSunColor * sunDisk * dynamicDiskIntensity);

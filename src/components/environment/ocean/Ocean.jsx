@@ -21,6 +21,9 @@ export default function Ocean({
     fogColor,
     turbidity,
     sunGlowSize,
+    sunDiskSize,
+    sunDiskIntensity,
+    sunGlowIntensity,
     optics
 }) {
 
@@ -113,13 +116,14 @@ export default function Ocean({
             materialRef.current.uFoamPower = optics.foamPower;
 
             // FOG
-            if (fogColor) {
-                materialRef.current.uniforms.uFogColor.value.set(fogColor);
-            }
+            materialRef.current.uniforms.uFogColor.value.set(fogColor);
             materialRef.current.uFogDensity = optics.fogDensity;
             materialRef.current.uFogSunScattering = optics.fogSunScattering;
             materialRef.current.uTurbidity = turbidity;
             materialRef.current.uSunGlowSize = sunGlowSize;
+            materialRef.current.uSunDiskSize = sunDiskSize;
+            materialRef.current.uSunDiskIntensity = sunDiskIntensity;
+            materialRef.current.uSunGlowIntensity = sunGlowIntensity;   
         }
 
         //GPGPU Physics
