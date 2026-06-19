@@ -60,7 +60,12 @@ const OceanMaterial = shaderMaterial(
         uFoamSpeed: new THREE.Vector2(0.4, 0.8), // Vector2!
         uFoamDistortion: 0.8,
         uFoamEdgeSoftness: 0.1,
-        uFoamPower: 3.0
+        uFoamPower: 3.0,
+
+        //FOG
+        uFogColor: new THREE.Color('#ffffff'),
+        uFogDensity: 0.0005,
+        uFogSunScattering: 0.5,
     },
     oceanVertexShader,
     oceanFragmentShader

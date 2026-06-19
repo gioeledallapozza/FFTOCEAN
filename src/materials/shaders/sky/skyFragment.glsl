@@ -20,7 +20,7 @@ void main() {
     vec3 sunDirection = normalize(uSunPosition);
 
     //Gradient
-    float height = normalize(viewDirection).y;
+    float height = max(normalize(viewDirection).y, 0.0);
     //Law of Beer-Lambert 
     float opticalDepth = exp(-height * (8.0 - uRayleigh)); //,deò the color of the horizon
     vec3 skyColor = mix(uTopColor, uBottomColor, opticalDepth);

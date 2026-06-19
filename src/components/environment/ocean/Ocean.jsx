@@ -18,6 +18,9 @@ export default function Ocean({
     displacementScale,
     sunPosition,
     sunColor,
+    fogColor,
+    turbidity,
+    sunGlowSize,
     optics
 }) {
 
@@ -108,6 +111,15 @@ export default function Ocean({
             materialRef.current.uFoamDistortion = optics.foamDistortion;
             materialRef.current.uFoamEdgeSoftness = optics.foamEdgeSoftness;
             materialRef.current.uFoamPower = optics.foamPower;
+
+            // FOG
+            if (fogColor) {
+                materialRef.current.uniforms.uFogColor.value.set(fogColor);
+            }
+            materialRef.current.uFogDensity = optics.fogDensity;
+            materialRef.current.uFogSunScattering = optics.fogSunScattering;
+            materialRef.current.uTurbidity = turbidity;
+            materialRef.current.uSunGlowSize = sunGlowSize;
         }
 
         //GPGPU Physics
@@ -134,7 +146,8 @@ export default function Ocean({
     return (<>
         <mesh ref={meshRef} geometry={oceanGeometry}>
             <oceanMaterial 
-                    ref={materialRef} 
+                    ref={materialRef}
+                    toneMapped={true}
                     glslVersion={THREE.GLSL3} 
                     wireframe={false} 
             />

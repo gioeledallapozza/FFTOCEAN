@@ -38,6 +38,12 @@ uniform float uFoamEdgeSoftness;
 uniform float uFoamPower;
 uniform float uFresnelSmoothness;
 
+uniform vec3 uFogColor;
+uniform float uFogDensity;
+uniform float uFogSunScattering;
+uniform float uTurbidity;
+uniform float uGlowSize;
+
 //Varying
 in vec2 vUv; 
 in vec3 vWorldPosition;
@@ -49,6 +55,7 @@ in float vJacobian;
 out vec4 fragColor;
 
 #include ../includes/fresnel.glsl
+// #include <tonemapping_pars_fragment>
 
 void main()
 {  
@@ -126,7 +133,27 @@ void main()
     
     foamMask = clamp(foamMask, 0.0, 1.0);
     
-    // FINAL COLOR
     finalColor = mix(finalColor, uFoamColor, foamMask);
+
+    // FOG & ATMOSPHERIC SCATTERING
+    float fogFactor = clamp(1.0 - exp(-pow(dist * uFogDensity, 2.0)), 0.0, 1.0); //exponential decay
+    vec3 rayDirection = -viewDirection;
+    float sunDot = dot(rayDirection, normalize(uSunPosition));
+    
+    // In-Scattering (sun aura)
+    float inScattering = smoothstep(0.992, 1.0, sunDot); //Uniform in future
+    // float dynamicInScatteringSize = uGlowSize - (uTurbidity * 0.002);
+    // float inScattering = smoothstep(dynamicInScatteringSize, 1.0, sunDot);
+    vec3 dynamicFogColor = mix(uFogColor, uSunColor, inScattering * 0.3) + (uSunColor * inScattering * uFogSunScattering);
+    
+    finalColor = mix(finalColor, dynamicFogColor, fogFactor);
+
+    // FINAL COLOR
+    finalColor = clamp(finalColor, 0.0, 1.0);
     fragColor = vec4(finalColor, 1.0);
+
+    //finalColor = toneMapping(finalColor); //convert tone mapping
+    
+    //Linear to sRGB space
+    //fragColor = linearToOutputTexel(vec4(finalColor, 1.0));
 }

@@ -11,7 +11,7 @@ const getInitialFftResolution = () => {
     return 256;
 };
 
-export default function OceanManager({sunPosition, sunColor}) {
+export default function OceanManager({sunPosition, sunColor, fogColor, turbidity, sunGlowSize }) {
     
     // Ocean parameters
     const { resolution, fftResolution, patchSize, displacementScale, amplitude, choppyScale } = useControls('Ocean Core', {
@@ -94,6 +94,10 @@ export default function OceanManager({sunPosition, sunColor}) {
             foamDistortion: { value: 1.4, min: 0.1, max: 2.0, step: 0.01 }, 
             foamEdgeSoftness: { value: 0.8, min: 0.01, max: 1, step: 0.01 }, 
             foamPower: { value: 0.5, min: 0.5, max: 5.0, step: 0.1 } 
+        }, { collapsed: true }),
+        Fog: folder({
+            fogDensity: { value: 0.0005, min: 0.0, max: 0.01, step: 0.0001 },
+            fogSunScattering: { value: 2.5, min: 0.0, max: 10.0, step: 0.01 }
         }, { collapsed: true })
     }, { collapsed: true });
 
@@ -110,6 +114,9 @@ export default function OceanManager({sunPosition, sunColor}) {
             displacementScale={displacementScale}
             sunPosition={sunPosition}
             sunColor={sunColor}
+            fogColor={fogColor}
+            turbidity={turbidity}
+            sunGlowSize={sunGlowSize}
             optics={opticsControls}
         />
     )
