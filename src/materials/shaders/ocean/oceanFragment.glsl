@@ -16,6 +16,8 @@ uniform float uSpecularPower;
 uniform float uSpecularMin;
 uniform float uSpecularMax;
 uniform float uSpecularIntensity;
+uniform float uFadeStart;
+uniform float uFadeEnd;
 
 uniform samplerCube uEnvMap;
 
@@ -54,6 +56,18 @@ void main()
     vec3 normal = normalize(vNormal);
     vec3 viewDirection = normalize(vViewDirection); //We need to normalize again
     vec3 lightDirection = normalize(uSunPosition);
+    vec3 upVector = vec3(0.0, 1.0, 0.0);
+
+    // ANTI-ALIASING (DISTANCE FADE) 
+    float dist = length(cameraPosition - vWorldPosition); //distance beetween current pixel and camera
+    
+    // Under 100m perfect details (0.0)
+    // Over 1500m normals are reduced (1.0)
+    float aaFade = smoothstep(uFadeStart, uFadeEnd, dist); //uFade start, uFadeEnd
+
+    //Mix the normals with an up vector (to reduce the effect)
+    normal = normalize(mix(normal, upVector, aaFade));
+    float dynamicSpecularIntensity = mix(uSpecularIntensity, 0.0, aaFade);
 
     //UNDERWATER COLOR
     float heightMask = smoothstep(uColorMinHeight, uColorMaxHeight, vHeight);
@@ -73,8 +87,7 @@ void main()
 
     //SURFACE COLOR
     //EnvMap reflection
-    vec3 upVector = vec3(0.0, 1.0, 0.0); //Dual normal (stylized)
-    vec3 fresnelNormal = normalize(mix(normal, upVector, uFresnelSmoothness)); 
+    vec3 fresnelNormal = normalize(mix(normal, upVector, uFresnelSmoothness));  //Dual normal (stylized)
     vec3 reflectionVector = reflect(-viewDirection, fresnelNormal);   //calculate rebound angle  
     vec3 envReflection = textureLod(uEnvMap, reflectionVector, 1.5).rgb;
     
@@ -85,7 +98,7 @@ void main()
     vec3 halfVector = normalize(lightDirection + viewDirection); //Calculate half vector for specular highlights
     float specularTerm = pow(max(dot(halfVector, normal), 0.0), uSpecularPower); 
     float sunPathMask = smoothstep(uSpecularMin, uSpecularMax, specularTerm); 
-    vec3 directSpecular = uSunColor * sunPathMask * uSpecularIntensity;
+    vec3 directSpecular = uSunColor * sunPathMask * dynamicSpecularIntensity;
 
     vec3 surfaceReflection = envReflection + directSpecular;
 

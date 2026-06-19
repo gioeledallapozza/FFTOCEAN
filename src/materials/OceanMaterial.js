@@ -38,6 +38,8 @@ const OceanMaterial = shaderMaterial(
         uSpecularMax: 0.45,
         uSpecularIntensity: 2.0,
         uFresnelSmoothness: 0.5,
+        uFadeStart: 100,
+        uFadeEnd: 1500,
 
         // Environment
         uEnvMap: null,

@@ -70,7 +70,9 @@ export default function OceanManager({sunPosition, sunColor}) {
             specularMin: { value: 0.90, min: 0.0, max: 1.0, step: 0.01 },
             specularMax: { value: 0.99, min: 0.0, max: 1.0, step: 0.01 },
             specularIntensity: { value: 4.7, min: 0.0, max: 10.0, step: 0.1 },
-            fresnelSmoothness: { value:  0.5, min: 0.0, max: 1.0, step: 0.01 }
+            fresnelSmoothness: { value:  0.5, min: 0.0, max: 1.0, step: 0.01 },
+            fadeStart: { value:  patchSize * 2.0, min: 0.0, max: patchSize * 16.0, step: 0.01 },
+            fadeEnd: { value:  patchSize * 14.0, min: 0.0, max: patchSize * 16.0, step: 0.01 } //patchSize x lod levels Math.pow(2, levels - 1)
         }, { collapsed: true }),
         
         // Subsurface Scattering (SSS)

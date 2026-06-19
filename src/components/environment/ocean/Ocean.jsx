@@ -82,7 +82,9 @@ export default function Ocean({
             materialRef.current.uSpecularMin = optics.specularMin;
             materialRef.current.uSpecularMax = optics.specularMax;
             materialRef.current.uSpecularIntensity = optics.specularIntensity;
-            materialRef.current.uFresnelSmoothness = optics.fresnelSmoothness
+            materialRef.current.uFresnelSmoothness = optics.fresnelSmoothness;
+            materialRef.current.uFadeStart = optics.fadeStart;
+            materialRef.current.uFadeEnd = optics.fadeEnd;
 
             //ENVIRONMENT
             if (scene.environment) {
