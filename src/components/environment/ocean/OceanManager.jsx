@@ -77,12 +77,13 @@ export default function OceanManager({sunPosition, sunColor, fogColor, turbidity
         
         // Subsurface Scattering (SSS)
         SSS: folder({
-            waterSSS: { value: '#5393e6' }, //#5393e6
-            sssPower: { value: 3.4, min: 1.0, max: 20.0, step: 0.1 },
+            waterSSS: { value: '#3b72ba' }, //#5393e6
+            sssPower: { value: 4.7, min: 1.0, max: 20.0, step: 0.1 },
             sssScale: { value: 2.0, min: 0.0, max: 5.0, step: 0.1 },
             sssMinHeight: { value: -0.2, min: -2.0, max: 2.0, step: 0.01 },
             sssMaxHeight: { value: 1.0, min: -2.0, max: 5.0, step: 0.01 },
-            sssWrap: { value: 0.38, min: 0.0, max: 1.0, step: 0.01 }
+            sssWrap: { value: 0.38, min: 0.0, max: 1.0, step: 0.01 },
+            sssDistortion: { value: 0.4, min: 0.0, max: 1.0, step: 0.01 }
         }, { collapsed: true }),
         
         // Foam
@@ -98,7 +99,13 @@ export default function OceanManager({sunPosition, sunColor, fogColor, turbidity
         Fog: folder({
             fogDensity: { value: 0.0005, min: 0.0, max: 0.01, step: 0.0001 },
             fogSunScattering: { value: 2.5, min: 0.0, max: 10.0, step: 0.01 }
-        }, { collapsed: true })
+        }, { collapsed: true }),
+        MacroVariation: folder({
+            dualScale: { value: 0.317, min: 0.01, max: 1.0, step: 0.001 },
+            dualWeight: { value: 0.2, min: 0.0, max: 1.0, step: 0.01 },
+            dualAngle: { value: 0.65, min: 0.0, max: Math.PI * 2, step: 0.01 },
+            windScale: { value: 1000.0, min: 100.0, max: 10000.0, step: 10.0 }
+        }, { collapsed: false }),
     }, { collapsed: true });
 
     return (

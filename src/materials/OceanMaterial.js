@@ -51,6 +51,7 @@ const OceanMaterial = shaderMaterial(
         uSssMinHeight: -0.2,
         uSssMaxHeight: 1.0, 
         uSssWrap: 0.2,
+        uSssDistortion: 0.2,
 
         // Foam
         uFoamColor: new THREE.Color('#ffffff'),
@@ -71,6 +72,11 @@ const OceanMaterial = shaderMaterial(
         uSunGlowSize: 0.98,
         uSunDiskIntensity: 2.0,
         uSunGlowIntensity: 0.8,
+
+        uDualScale: { value: 0.317 },
+    uDualWeight: { value: 0.2 },
+    uDualAngle: { value: 0.65 },
+    uWindScale: { value: 1000.0 },
     },
     oceanVertexShader,
     oceanFragmentShader

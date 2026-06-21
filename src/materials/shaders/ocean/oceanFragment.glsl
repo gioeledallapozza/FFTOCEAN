@@ -27,6 +27,7 @@ uniform float uSssScale;
 uniform float uSssMinHeight;
 uniform float uSssMaxHeight;
 uniform float uSssWrap;
+uniform float uSssDistortion;
 
 uniform vec3 uFoamColor;
 uniform sampler2D uFoamTexture;
@@ -85,17 +86,18 @@ void main()
     vec3 baseWaterColor = mix(uWaterDeep, uWaterShallow, heightMask);
 
     // SUBSURFACE SCATTERING (SSS)
-    float sunGlowRadiusY = sqrt(max(0.0, 1.0 - uSunGlowSize * uSunGlowSize));
-    float sunElevationMask = smoothstep(-sunGlowRadiusY, sunGlowRadiusY, lightDirection.y);
+    // float sunGlowRadiusY = sqrt(max(0.0, 1.0 - uSunGlowSize * uSunGlowSize));
+    // float sunElevationMask = smoothstep(-sunGlowRadiusY, sunGlowRadiusY, lightDirection.y);
 
-    float sssAlignment = max(0.0, dot(viewDirection, -lightDirection)); //Opposite direction of the sun. 
+    vec3 distortedLight = normalize(-lightDirection + normal * uSssDistortion); //Deflect the lightDirection with wave normals
+    float sssAlignment = max(0.0, dot(viewDirection, distortedLight)); //Allignement with view
     float sssTerm = pow(sssAlignment, uSssPower) * uSssScale;  //Elevate and scale
     
     float sssMask = smoothstep(uSssMinHeight, uSssMaxHeight, vHeight); //Mask, only for high waves (we could use uColorMaxHeight)
-    float sssLightEmmission = max(0.0, dot(normal, -lightDirection) + uSssWrap); //calculate if the sun is pointing to the back of the wave
-    sssMask *= sssLightEmmission; //multiply for enveloping lighting
+    // float sssLightEmmission = max(0.0, dot(normal, -lightDirection) + uSssWrap); //calculate if the sun is pointing to the back of the wave
+    // sssMask *= sssLightEmmission; //multiply for enveloping lighting
 
-    vec3 sssColor = uWaterSSS * sssTerm * sssMask * sunElevationMask;
+    vec3 sssColor = uWaterSSS * sssTerm * sssMask; //* sunElevationMask
 
     vec3 waterInside = baseWaterColor + sssColor; //INTERNAL COLOR
 

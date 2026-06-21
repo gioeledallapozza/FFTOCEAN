@@ -104,6 +104,7 @@ export default function Ocean({
             materialRef.current.uSssMinHeight = optics.sssMinHeight;
             materialRef.current.uSssMaxHeight = optics.sssMaxHeight;
             materialRef.current.uSssWrap = optics.sssWrap;
+            materialRef.current.uSssDistortion = optics.sssDistortion;
             
             //FOAM
             materialRef.current.uniforms.uFoamColor.value.set(optics.foamColor);
@@ -124,6 +125,12 @@ export default function Ocean({
             materialRef.current.uSunDiskSize = sunDiskSize;
             materialRef.current.uSunDiskIntensity = sunDiskIntensity;
             materialRef.current.uSunGlowIntensity = sunGlowIntensity;   
+
+
+            materialRef.current.uDualScale = optics.dualScale;
+    materialRef.current.uDualWeight = optics.dualWeight;
+    materialRef.current.uDualAngle = optics.dualAngle;
+    materialRef.current.uWindScale = optics.windScale;
         }
 
         //GPGPU Physics
