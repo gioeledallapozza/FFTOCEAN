@@ -159,6 +159,7 @@ export default function Ocean({
             <oceanMaterial 
                     ref={materialRef}
                     toneMapped={true}
+                    side={THREE.DoubleSide}
                     glslVersion={THREE.GLSL3} 
                     wireframe={false} 
             />

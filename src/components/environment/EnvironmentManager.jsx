@@ -4,17 +4,19 @@ import { useControls, folder } from 'leva';
 import { Environment } from '@react-three/drei';
 import OceanManager from './ocean/OceanManager';
 import SkyManager from './sky/SkyManager';
+import SeaFloorManager from './seafloor/SeaFloorManager';
 
 export default function EnvironmentManager() {
 
     //Global variables  
-    const { sunDistance, sunTheta, sunPhi, sunColor, topColor, bottomColor, turbidity, sunGlowSize, sunDiskSize, sunDiskIntensity, sunGlowIntensity } = useControls('Global Environment', {
+    const { sunDistance, sunTheta, sunPhi, sunColor, topColor, bottomColor, turbidity, rayleigh, sunGlowSize, sunDiskSize, sunDiskIntensity, sunGlowIntensity } = useControls('Global Environment', {
         Sun: folder({
             sunDistance: { value: 500.0, min: 100.0, max: 2000.0, step: 10.0 },
             sunTheta: { value: 1.44, min: 0, max: Math.PI, step: 0.01 }, 
             sunPhi: { value: 4.57, min: 0, max: Math.PI * 2, step: 0.01 },
             sunColor: { value: '#ffdf70' },
             turbidity: { value: 6.0, min: 0.1, max: 20, step: 0.1 },
+            rayleigh: { value: 1.2, min: 0, max: 4, step: 0.1 },
             sunGlowSize: { value: 0.999, min: 0.900, max: 0.9999, step: 0.0001 },
             sunDiskSize: { value: 0.9999, min: 0.9800, max: 0.99999, step: 0.00001 },
             sunDiskIntensity: { value: 1.5, min: 0.0, max: 10.0, step: 0.1 },
@@ -48,6 +50,7 @@ export default function EnvironmentManager() {
                     topColor={topColor}
                     bottomColor={bottomColor}
                     turbidity={turbidity}
+                    rayleigh={rayleigh}
                     sunGlowSize={sunGlowSize}
                     sunDiskSize={sunDiskSize}
                     sunDiskIntensity={sunDiskIntensity}
@@ -64,6 +67,7 @@ export default function EnvironmentManager() {
                 sunDiskIntensity={sunDiskIntensity}
                 sunGlowIntensity={sunGlowIntensity}
             />
+            <SeaFloorManager />
         </>
     );
 }

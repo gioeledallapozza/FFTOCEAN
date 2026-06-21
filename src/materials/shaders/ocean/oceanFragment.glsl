@@ -64,6 +64,23 @@ out vec4 fragColor;
 
 void main()
 {  
+    //UNDERWATER LOOK
+    if (!gl_FrontFacing) {
+        vec3 lookDirection = normalize(vWorldPosition - cameraPosition);
+        float lookUpFactor = smoothstep(-0.2, 0.8, lookDirection.y);
+        vec3 waterVolumeColor = mix(uWaterDeep, uWaterShallow, lookUpFactor * 0.4);
+        
+        float dist = length(cameraPosition - vWorldPosition);
+        float underwaterFog = clamp(1.0 - exp(-pow(dist * (uFogDensity * 15.0), 2.0)), 0.0, 1.0);
+        
+        vec3 finalUnderwater = mix(waterVolumeColor, uWaterDeep, underwaterFog);
+        
+        fragColor = vec4(finalUnderwater, 1.0);
+        
+        return; 
+    }
+
+
     //NORMALS AND VECTORAL DIRECTIONS
     vec3 normal = normalize(vNormal);
     vec3 viewDirection = normalize(vViewDirection); //We need to normalize again
