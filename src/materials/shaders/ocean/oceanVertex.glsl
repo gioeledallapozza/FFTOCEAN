@@ -1,4 +1,4 @@
-uniform sampler2D uDisplacementY; //Height Y, FUTURE JACOBIAN TODO
+uniform sampler2D uDisplacementY; //Height Y, Jacobian
 uniform sampler2D uDisplacementX; //Choppy X, Slope X
 uniform sampler2D uDisplacementZ; //Choppy Z, Slope Z
 
@@ -16,6 +16,9 @@ out vec3 vViewDirection;
 out float vHeight;
 out vec3 vNormal;
 out float vJacobian;
+out vec3 vViewPosition;
+
+#include ../includes/simple2dnoise.glsl
 
 void main()
 {
@@ -49,18 +52,25 @@ void main()
 
 
     // --- FFT DISPLACEMENT ---
-    //vec3 worldPos = (modelMatrix * vec4(position, 1.0)).xyz;
     vec2 fftUv = finalWorldXZ / uPatchSize;
 
     // Read X,Y,Z displacements 
-    float height = texture(uDisplacementY, fftUv).r;
 
-    vec4 dataX = texture(uDisplacementX, fftUv);
-    vec4 dataZ = texture(uDisplacementZ, fftUv);
+    //Primary Wave
+    float height1 = texture(uDisplacementY, fftUv).r;
+
+    vec4 dataX1 = texture(uDisplacementX, fftUv);
+    vec4 dataZ1 = texture(uDisplacementZ, fftUv);
+
+    float jacobian1 = texture(uDisplacementY, fftUv).b;
+
+
+    //Height
+    float height = height1;
 
     //Choppy
-    float choppyX = dataX.x; 
-    float choppyZ = dataZ.x;
+    float choppyX = dataX1.x; 
+    float choppyZ = dataZ1.x;
 
     vec3 newPosition = vec3(finalWorldXZ.x, 0.0, finalWorldXZ.y);
 
@@ -69,18 +79,22 @@ void main()
     newPosition.z -= choppyZ * uScale * uChoppyScale;
 
     //Normals
-    float slopeX = dataX.z; 
-    float slopeZ = dataZ.z;
+    float slopeX = dataX1.z; 
+    float slopeZ = dataZ1.z;
 
     float actualSlopeX = slopeX * uScale * uNormalScale;
     float actualSlopeZ = slopeZ * uScale * uNormalScale;
 
     vec3 worldNormal = normalize(vec3(-actualSlopeX, 1.0, -actualSlopeZ));
-    // vec3 worldNormal = normalize(mat3(modelMatrix) * mathNormal);
 
+    //Jacobian
+    float finalJacobian = jacobian1;
+
+    vec4 clipSpace = projectionMatrix * viewMatrix * vec4(newPosition, 1.0);
     // RENDERING
+    gl_Position = clipSpace;
     // DO NOT USE modelMatrix finalWorldXZ it's already a final global position.
-    gl_Position = projectionMatrix * viewMatrix * vec4(newPosition, 1.0);
+    //gl_Position = projectionMatrix * viewMatrix * vec4(newPosition, 1.0);
 
     //Varyings
     vUv = fftUv;
@@ -89,5 +103,6 @@ void main()
     vViewDirection = normalize(cameraPosition - vWorldPosition);
     vHeight = height * uScale;
     vNormal = normalize(worldNormal);
-    vJacobian = texture(uDisplacementY, fftUv).b; //Pass the jacobian so it can be interpolated
+    vJacobian = finalJacobian; //Pass the jacobian so it can be interpolated
+    vViewPosition = (viewMatrix * vec4(newPosition, 1.0)).xyz;
 }

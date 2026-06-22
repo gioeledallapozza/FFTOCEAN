@@ -16,8 +16,18 @@ export default function Ocean({
     windSpeed, 
     windDirection,
     displacementScale,
+    depthTexture,
+    oceanDataRef,
     sunPosition,
     sunColor,
+    fogColor,
+    turbidity,
+    sunGlowSize,
+    sunDiskSize,
+    sunDiskIntensity,
+    sunGlowIntensity,
+    waterDeepColor,
+    waterShallowColor,
     optics
 }) {
 
@@ -25,7 +35,7 @@ export default function Ocean({
     const meshRef = useRef();       // Reference to the clipmap mesh
     const gpgpuTimer = useRef(0.0); // Accumulator for throttling
     
-    const { scene } = useThree();
+    const { scene, camera, size, viewport } = useThree();
 
     const textures = useTextures(); //Load textures
     useOceanLOD(meshRef, materialRef); //Call the LOD
@@ -70,8 +80,8 @@ export default function Ocean({
             materialRef.current.uNormalScale = optics.normalScale;
 
             //BASIC OPTICS
-            materialRef.current.uniforms.uWaterDeep.value.set(optics.waterDeep);
-            materialRef.current.uniforms.uWaterShallow.value.set(optics.waterShallow);
+            materialRef.current.uniforms.uWaterDeep.value.set(waterDeepColor);
+            materialRef.current.uniforms.uWaterShallow.value.set(waterShallowColor);
             materialRef.current.uColorMinHeight = optics.colorMinHeight;
             materialRef.current.uColorMaxHeight = optics.colorMaxHeight;
 
@@ -82,7 +92,9 @@ export default function Ocean({
             materialRef.current.uSpecularMin = optics.specularMin;
             materialRef.current.uSpecularMax = optics.specularMax;
             materialRef.current.uSpecularIntensity = optics.specularIntensity;
-            materialRef.current.uFresnelSmoothness = optics.fresnelSmoothness
+            materialRef.current.uFresnelSmoothness = optics.fresnelSmoothness;
+            materialRef.current.uFadeStart = optics.fadeStart;
+            materialRef.current.uFadeEnd = optics.fadeEnd;
 
             //ENVIRONMENT
             if (scene.environment) {
@@ -96,6 +108,7 @@ export default function Ocean({
             materialRef.current.uSssMinHeight = optics.sssMinHeight;
             materialRef.current.uSssMaxHeight = optics.sssMaxHeight;
             materialRef.current.uSssWrap = optics.sssWrap;
+            materialRef.current.uSssDistortion = optics.sssDistortion;
             
             //FOAM
             materialRef.current.uniforms.uFoamColor.value.set(optics.foamColor);
@@ -106,6 +119,27 @@ export default function Ocean({
             materialRef.current.uFoamDistortion = optics.foamDistortion;
             materialRef.current.uFoamEdgeSoftness = optics.foamEdgeSoftness;
             materialRef.current.uFoamPower = optics.foamPower;
+
+            // FOG
+            materialRef.current.uniforms.uFogColor.value.set(fogColor);
+            materialRef.current.uFogDensity = optics.fogDensity;
+            materialRef.current.uFogSunScattering = optics.fogSunScattering;
+            materialRef.current.uTurbidity = turbidity;
+            materialRef.current.uWaterClarity = optics.waterClarity;
+            materialRef.current.uSunGlowSize = sunGlowSize;
+            materialRef.current.uSunDiskSize = sunDiskSize;
+            materialRef.current.uSunDiskIntensity = sunDiskIntensity;
+            materialRef.current.uSunGlowIntensity = sunGlowIntensity;   
+
+            // DEPTH TEXTURE E SCREEN SPACE
+            materialRef.current.uniforms.uSeafloorDepth.value = depthTexture;
+           materialRef.current.uniforms.uScreenResolution.value.set(
+                Math.floor(size.width * viewport.dpr), 
+                Math.floor(size.height * viewport.dpr)
+            );
+            materialRef.current.uCameraNear = camera.near;
+            materialRef.current.uCameraFar = camera.far;
+
         }
 
         //GPGPU Physics
@@ -124,17 +158,27 @@ export default function Ocean({
                 materialRef.current.uniforms.uDisplacementZ.value = displacementZ;
             }
 
+          if (oceanDataRef && oceanDataRef.current) {
+                oceanDataRef.current.displacementY = displacementY;
+                oceanDataRef.current.patchSize = patchSize;
+                oceanDataRef.current.scale = displacementScale;
+                oceanDataRef.current.waterDeepColor = waterDeepColor;
+                oceanDataRef.current.waterClarity = optics.waterClarity; 
+            }
+
             // Keeps the temporal remainder
             gpgpuTimer.current = gpgpuTimer.current % GPGPU_INTERVAL;
         }
     });
 
     return (<>
-        <mesh ref={meshRef} geometry={oceanGeometry}>
+        <mesh ref={meshRef} geometry={oceanGeometry} frustumCulled={false}>
             <oceanMaterial 
-                    ref={materialRef} 
-                    glslVersion={THREE.GLSL3} 
-                    wireframe={false} 
+                ref={materialRef}
+                side={THREE.DoubleSide}
+                transparent={true}
+                glslVersion={THREE.GLSL3} 
+                wireframe={false} 
             />
         </mesh>
         </>

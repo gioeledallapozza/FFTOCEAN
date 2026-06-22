@@ -11,7 +11,7 @@ const getInitialFftResolution = () => {
     return 256;
 };
 
-export default function OceanManager({sunPosition, sunColor}) {
+export default function OceanManager({depthTexture, oceanDataRef, sunPosition, sunColor, fogColor, turbidity, sunGlowSize, sunDiskSize, sunDiskIntensity, sunGlowIntensity, waterDeepColor, waterShallowColor }) {
     
     // Ocean parameters
     const { resolution, fftResolution, patchSize, displacementScale, amplitude, choppyScale } = useControls('Ocean Core', {
@@ -59,8 +59,6 @@ export default function OceanManager({sunPosition, sunColor}) {
         }, { collapsed: true }),
         // Base colors
         Basic: folder({
-            waterDeep: { value: '#52b9e5 ' }, //#52b9e5 
-            waterShallow: { value: '#59cdff' }, //#59cdff
             colorMinHeight: {  value: -4.5, min: -10.0, max: 0.0, step: 0.1 },
             colorMaxHeight: { value: 1.5, min: 0.0, max: 10.0, step: 0.1 }
         }, { collapsed: true }),
@@ -70,17 +68,20 @@ export default function OceanManager({sunPosition, sunColor}) {
             specularMin: { value: 0.90, min: 0.0, max: 1.0, step: 0.01 },
             specularMax: { value: 0.99, min: 0.0, max: 1.0, step: 0.01 },
             specularIntensity: { value: 4.7, min: 0.0, max: 10.0, step: 0.1 },
-            fresnelSmoothness: { value:  0.5, min: 0.0, max: 1.0, step: 0.01 }
+            fresnelSmoothness: { value:  0.5, min: 0.0, max: 1.0, step: 0.01 },
+            fadeStart: { value:  patchSize * 2.0, min: 0.0, max: patchSize * 16.0, step: 0.01 },
+            fadeEnd: { value:  patchSize * 14.0, min: 0.0, max: patchSize * 16.0, step: 0.01 } //patchSize x lod levels Math.pow(2, levels - 1)
         }, { collapsed: true }),
         
         // Subsurface Scattering (SSS)
         SSS: folder({
-            waterSSS: { value: '#5393e6' }, //#5393e6
-            sssPower: { value: 3.4, min: 1.0, max: 20.0, step: 0.1 },
+            waterSSS: { value: '#3b72ba' }, //#5393e6
+            sssPower: { value: 4.7, min: 1.0, max: 20.0, step: 0.1 },
             sssScale: { value: 2.0, min: 0.0, max: 5.0, step: 0.1 },
             sssMinHeight: { value: -0.2, min: -2.0, max: 2.0, step: 0.01 },
             sssMaxHeight: { value: 1.0, min: -2.0, max: 5.0, step: 0.01 },
-            sssWrap: { value: 0.38, min: 0.0, max: 1.0, step: 0.01 }
+            sssWrap: { value: 0.38, min: 0.0, max: 1.0, step: 0.01 },
+            sssDistortion: { value: 0.4, min: 0.0, max: 1.0, step: 0.01 }
         }, { collapsed: true }),
         
         // Foam
@@ -92,6 +93,11 @@ export default function OceanManager({sunPosition, sunColor}) {
             foamDistortion: { value: 1.4, min: 0.1, max: 2.0, step: 0.01 }, 
             foamEdgeSoftness: { value: 0.8, min: 0.01, max: 1, step: 0.01 }, 
             foamPower: { value: 0.5, min: 0.5, max: 5.0, step: 0.1 } 
+        }, { collapsed: true }),
+        Fog: folder({
+            fogDensity: { value: 0.0005, min: 0.0, max: 0.01, step: 0.0001 },
+            fogSunScattering: { value: 2.5, min: 0.0, max: 10.0, step: 0.01 },
+            waterClarity: { value: 25.0, min: 1.0, max: 100.0, step: 1.0 }
         }, { collapsed: true })
     }, { collapsed: true });
 
@@ -106,8 +112,18 @@ export default function OceanManager({sunPosition, sunColor}) {
             windSpeed={windSpeed}
             windDirection={windDirection}
             displacementScale={displacementScale}
+            depthTexture={depthTexture}
+            oceanDataRef={oceanDataRef}
             sunPosition={sunPosition}
             sunColor={sunColor}
+            fogColor={fogColor}
+            turbidity={turbidity}
+            sunGlowSize={sunGlowSize}
+            sunDiskSize={sunDiskSize}
+            sunDiskIntensity={sunDiskIntensity}
+            sunGlowIntensity={sunGlowIntensity}
+            waterDeepColor={waterDeepColor}
+            waterShallowColor={waterShallowColor}
             optics={opticsControls}
         />
     )

@@ -7,6 +7,7 @@ export function useTextures() {
 
     const textures = useTexture({
         foam: '/textures/foam/foam.webp',
+        sand: '/textures/sand/sand.webp'
         // normal: '/textures/normal/normals.webp', // to do
     });
 

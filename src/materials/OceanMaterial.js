@@ -38,6 +38,8 @@ const OceanMaterial = shaderMaterial(
         uSpecularMax: 0.45,
         uSpecularIntensity: 2.0,
         uFresnelSmoothness: 0.5,
+        uFadeStart: 100,
+        uFadeEnd: 1500,
 
         // Environment
         uEnvMap: null,
@@ -49,6 +51,7 @@ const OceanMaterial = shaderMaterial(
         uSssMinHeight: -0.2,
         uSssMaxHeight: 1.0, 
         uSssWrap: 0.2,
+        uSssDistortion: 0.2,
 
         // Foam
         uFoamColor: new THREE.Color('#ffffff'),
@@ -58,7 +61,24 @@ const OceanMaterial = shaderMaterial(
         uFoamSpeed: new THREE.Vector2(0.4, 0.8), // Vector2!
         uFoamDistortion: 0.8,
         uFoamEdgeSoftness: 0.1,
-        uFoamPower: 3.0
+        uFoamPower: 3.0,
+
+        //FOG
+        uFogColor: new THREE.Color('#ffffff'),
+        uFogDensity: 0.0005,
+        uFogSunScattering: 0.5,
+        uTurbidity: 6.0,
+        uWaterClarity: 60.0,
+        uSunDiskSize: 0.9995,
+        uSunGlowSize: 0.98,
+        uSunDiskIntensity: 2.0,
+        uSunGlowIntensity: 0.8,
+
+        //boh
+        uSeafloorDepth: null,
+        uScreenResolution: new THREE.Vector2(1, 1),
+        uCameraNear: 0.1,
+        uCameraFar: 2000.0,
     },
     oceanVertexShader,
     oceanFragmentShader
