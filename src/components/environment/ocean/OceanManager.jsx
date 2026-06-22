@@ -11,7 +11,7 @@ const getInitialFftResolution = () => {
     return 256;
 };
 
-export default function OceanManager({sunPosition, sunColor, fogColor, turbidity, sunGlowSize, sunDiskSize, sunDiskIntensity, sunGlowIntensity }) {
+export default function OceanManager({depthTexture, oceanDataRef, sunPosition, sunColor, fogColor, turbidity, sunGlowSize, sunDiskSize, sunDiskIntensity, sunGlowIntensity, waterDeepColor, waterShallowColor }) {
     
     // Ocean parameters
     const { resolution, fftResolution, patchSize, displacementScale, amplitude, choppyScale } = useControls('Ocean Core', {
@@ -59,8 +59,6 @@ export default function OceanManager({sunPosition, sunColor, fogColor, turbidity
         }, { collapsed: true }),
         // Base colors
         Basic: folder({
-            waterDeep: { value: '#52b9e5 ' }, //#52b9e5 
-            waterShallow: { value: '#59cdff' }, //#59cdff
             colorMinHeight: {  value: -4.5, min: -10.0, max: 0.0, step: 0.1 },
             colorMaxHeight: { value: 1.5, min: 0.0, max: 10.0, step: 0.1 }
         }, { collapsed: true }),
@@ -98,14 +96,9 @@ export default function OceanManager({sunPosition, sunColor, fogColor, turbidity
         }, { collapsed: true }),
         Fog: folder({
             fogDensity: { value: 0.0005, min: 0.0, max: 0.01, step: 0.0001 },
-            fogSunScattering: { value: 2.5, min: 0.0, max: 10.0, step: 0.01 }
-        }, { collapsed: true }),
-        MacroVariation: folder({
-            dualScale: { value: 0.317, min: 0.01, max: 1.0, step: 0.001 },
-            dualWeight: { value: 0.2, min: 0.0, max: 1.0, step: 0.01 },
-            dualAngle: { value: 0.65, min: 0.0, max: Math.PI * 2, step: 0.01 },
-            windScale: { value: 1000.0, min: 100.0, max: 10000.0, step: 10.0 }
-        }, { collapsed: false }),
+            fogSunScattering: { value: 2.5, min: 0.0, max: 10.0, step: 0.01 },
+            waterClarity: { value: 25.0, min: 1.0, max: 100.0, step: 1.0 }
+        }, { collapsed: true })
     }, { collapsed: true });
 
     return (
@@ -119,6 +112,8 @@ export default function OceanManager({sunPosition, sunColor, fogColor, turbidity
             windSpeed={windSpeed}
             windDirection={windDirection}
             displacementScale={displacementScale}
+            depthTexture={depthTexture}
+            oceanDataRef={oceanDataRef}
             sunPosition={sunPosition}
             sunColor={sunColor}
             fogColor={fogColor}
@@ -127,6 +122,8 @@ export default function OceanManager({sunPosition, sunColor, fogColor, turbidity
             sunDiskSize={sunDiskSize}
             sunDiskIntensity={sunDiskIntensity}
             sunGlowIntensity={sunGlowIntensity}
+            waterDeepColor={waterDeepColor}
+            waterShallowColor={waterShallowColor}
             optics={opticsControls}
         />
     )

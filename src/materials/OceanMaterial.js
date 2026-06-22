@@ -68,15 +68,17 @@ const OceanMaterial = shaderMaterial(
         uFogDensity: 0.0005,
         uFogSunScattering: 0.5,
         uTurbidity: 6.0,
+        uWaterClarity: 60.0,
         uSunDiskSize: 0.9995,
         uSunGlowSize: 0.98,
         uSunDiskIntensity: 2.0,
         uSunGlowIntensity: 0.8,
 
-        uDualScale: { value: 0.317 },
-    uDualWeight: { value: 0.2 },
-    uDualAngle: { value: 0.65 },
-    uWindScale: { value: 1000.0 },
+        //boh
+        uSeafloorDepth: null,
+        uScreenResolution: new THREE.Vector2(1, 1),
+        uCameraNear: 0.1,
+        uCameraFar: 2000.0,
     },
     oceanVertexShader,
     oceanFragmentShader

@@ -10,17 +10,13 @@ uniform float uBaseVertexSpacing;
 uniform float uNormalScale;
 uniform float uChoppyScale;
 
-uniform float uDualScale;
-uniform float uDualWeight;
-uniform float uDualAngle;
-uniform float uWindScale;
-
 out vec2 vUv; //Varying
 out vec3 vWorldPosition;
 out vec3 vViewDirection;
 out float vHeight;
 out vec3 vNormal;
 out float vJacobian;
+out vec3 vViewPosition;
 
 #include ../includes/simple2dnoise.glsl
 
@@ -58,26 +54,6 @@ void main()
     // --- FFT DISPLACEMENT ---
     vec2 fftUv = finalWorldXZ / uPatchSize;
 
-    float derivativeMultiplier = uDualWeight * uDualScale;
-
-    //rotation angle (37°)
-    float cosA = cos(uDualAngle);
-    float sinA = sin(uDualAngle);
-
-    //rotation matrix
-    mat2 rot = mat2(cosA, -sinA, sinA, cosA);
-    mat2 invRot = mat2(cosA, sinA, -sinA, cosA);
-
-    vec2 fftUv2 = rot * (fftUv * uDualScale);
-
-    //WIND MASK
-    vec2 windUv = finalWorldXZ / uWindScale;
-    float windNoise = snoise(windUv);
-    float windMask = smoothstep(-2.5, 1.5, windNoise);
-
-    float dynamicDualWeight = uDualWeight * windMask;
-    float dynamicDerivative = derivativeMultiplier * windMask;
-
     // Read X,Y,Z displacements 
 
     //Primary Wave
@@ -88,25 +64,13 @@ void main()
 
     float jacobian1 = texture(uDisplacementY, fftUv).b;
 
-    //Secondary Wave
-    float height2 = texture(uDisplacementY, fftUv2).r;
-
-    vec4 dataX2 = texture(uDisplacementX, fftUv2);
-    vec4 dataZ2 = texture(uDisplacementZ, fftUv2);
-
-    float jacobian2 = texture(uDisplacementY, fftUv2).b;
-
-    //vector realignment
-    vec2 choppy2 = invRot * vec2(dataX2.x, dataZ2.x);
-    vec2 slope2 = invRot * vec2(dataX2.z, dataZ2.z);
-
 
     //Height
-    float height = height1 + height2 * dynamicDualWeight;
+    float height = height1;
 
     //Choppy
-    float choppyX = dataX1.x + choppy2.x * dynamicDualWeight; 
-    float choppyZ = dataZ1.x + choppy2.y * dynamicDualWeight;
+    float choppyX = dataX1.x; 
+    float choppyZ = dataZ1.x;
 
     vec3 newPosition = vec3(finalWorldXZ.x, 0.0, finalWorldXZ.y);
 
@@ -115,8 +79,8 @@ void main()
     newPosition.z -= choppyZ * uScale * uChoppyScale;
 
     //Normals
-    float slopeX = dataX1.z + slope2.x * dynamicDerivative; 
-    float slopeZ = dataZ1.z + slope2.y * dynamicDerivative;
+    float slopeX = dataX1.z; 
+    float slopeZ = dataZ1.z;
 
     float actualSlopeX = slopeX * uScale * uNormalScale;
     float actualSlopeZ = slopeZ * uScale * uNormalScale;
@@ -124,12 +88,13 @@ void main()
     vec3 worldNormal = normalize(vec3(-actualSlopeX, 1.0, -actualSlopeZ));
 
     //Jacobian
-    // float finalJacobian = jacobian1 + jacobian2 * dynamicDualWeight;
-     float finalJacobian = max(jacobian1, jacobian2 * dynamicDualWeight);
+    float finalJacobian = jacobian1;
 
+    vec4 clipSpace = projectionMatrix * viewMatrix * vec4(newPosition, 1.0);
     // RENDERING
+    gl_Position = clipSpace;
     // DO NOT USE modelMatrix finalWorldXZ it's already a final global position.
-    gl_Position = projectionMatrix * viewMatrix * vec4(newPosition, 1.0);
+    //gl_Position = projectionMatrix * viewMatrix * vec4(newPosition, 1.0);
 
     //Varyings
     vUv = fftUv;
@@ -139,4 +104,5 @@ void main()
     vHeight = height * uScale;
     vNormal = normalize(worldNormal);
     vJacobian = finalJacobian; //Pass the jacobian so it can be interpolated
+    vViewPosition = (viewMatrix * vec4(newPosition, 1.0)).xyz;
 }

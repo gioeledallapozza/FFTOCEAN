@@ -1,4 +1,3 @@
-import { useControls, folder } from 'leva';
 import Sky from './Sky';
 
 export default function SkyManager({sunPosition, sunColor, topColor, bottomColor, turbidity, rayleigh, sunGlowSize, sunDiskSize, sunDiskIntensity, sunGlowIntensity}) {

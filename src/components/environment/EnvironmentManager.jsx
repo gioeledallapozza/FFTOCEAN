@@ -6,10 +6,13 @@ import OceanManager from './ocean/OceanManager';
 import SkyManager from './sky/SkyManager';
 import SeaFloorManager from './seafloor/SeaFloorManager';
 
-export default function EnvironmentManager() {
+export default function EnvironmentManager({depthTexture, oceanDataRef}) {
 
     //Global variables  
-    const { sunDistance, sunTheta, sunPhi, sunColor, topColor, bottomColor, turbidity, rayleigh, sunGlowSize, sunDiskSize, sunDiskIntensity, sunGlowIntensity } = useControls('Global Environment', {
+    const { sunDistance, sunTheta, sunPhi, sunColor, 
+            topColor, bottomColor, turbidity, rayleigh, sunGlowSize, sunDiskSize, sunDiskIntensity, sunGlowIntensity,
+            waterDeepColor, waterShallowColor 
+        } = useControls('Global Environment', {
         Sun: folder({
             sunDistance: { value: 500.0, min: 100.0, max: 2000.0, step: 10.0 },
             sunTheta: { value: 1.44, min: 0, max: Math.PI, step: 0.01 }, 
@@ -25,7 +28,11 @@ export default function EnvironmentManager() {
         Sky: folder({
             topColor: { value: '#064289' },
             bottomColor: { value: '#79b8d9' }
-        })
+        }),
+        Water: folder({
+            waterDeepColor: { value: '#52b9e5 ' }, //#52b9e5 
+            waterShallowColor: { value: '#59cdff' }, //#59cdff
+        }, {collapsed: true})
     }, {collapsed: true});
 
     const globalSunPosition = useMemo(() => {
@@ -43,7 +50,7 @@ export default function EnvironmentManager() {
                 Everything inside Environment background generate a cubemap taht three.js will apply
                 FrameInfinity for dinamyc sky. can be bad for performance
             */}
-            <Environment background resolution={256} frames={Infinity}>
+            <Environment background resolution={256} frames={1}>
                 <SkyManager 
                     sunPosition={globalSunPosition} 
                     sunColor={globalSunColor}
@@ -58,6 +65,8 @@ export default function EnvironmentManager() {
                 />
             </Environment>
             <OceanManager 
+                depthTexture={depthTexture}
+                oceanDataRef={oceanDataRef}
                 sunPosition={globalSunPosition} 
                 sunColor={globalSunColor} 
                 fogColor={bottomColor}
@@ -66,8 +75,13 @@ export default function EnvironmentManager() {
                 sunDiskSize={sunDiskSize}
                 sunDiskIntensity={sunDiskIntensity}
                 sunGlowIntensity={sunGlowIntensity}
+                waterDeepColor={waterDeepColor}
+                waterShallowColor={waterShallowColor}
             />
-            <SeaFloorManager />
+            <SeaFloorManager 
+                waterDeepColor={waterDeepColor}
+                waterShallowColor={waterShallowColor}
+            />
         </>
     );
 }

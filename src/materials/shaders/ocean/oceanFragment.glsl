@@ -43,11 +43,18 @@ uniform vec3 uFogColor;
 uniform float uFogDensity;
 uniform float uFogSunScattering;
 uniform float uTurbidity;
+uniform float uWaterClarity;
 uniform float uGlowSize;
 uniform float uSunDiskSize;
 uniform float uSunGlowSize;
 uniform float uSunDiskIntensity;
 uniform float uSunGlowIntensity;
+
+//DEPTH
+uniform sampler2D uSeafloorDepth;
+uniform vec2 uScreenResolution;
+uniform float uCameraNear;
+uniform float uCameraFar;
 
 //Varying
 in vec2 vUv; 
@@ -56,33 +63,21 @@ in vec3 vViewDirection;
 in float vHeight;
 in vec3 vNormal;
 in float vJacobian;
+in vec3 vViewPosition;
 
 out vec4 fragColor;
 
 #include ../includes/fresnel.glsl
-// #include <tonemapping_pars_fragment>
+#include <packing>
 
 void main()
 {  
-    //UNDERWATER LOOK
-    if (!gl_FrontFacing) {
-        vec3 lookDirection = normalize(vWorldPosition - cameraPosition);
-        float lookUpFactor = smoothstep(-0.2, 0.8, lookDirection.y);
-        vec3 waterVolumeColor = mix(uWaterDeep, uWaterShallow, lookUpFactor * 0.4);
-        
-        float dist = length(cameraPosition - vWorldPosition);
-        float underwaterFog = clamp(1.0 - exp(-pow(dist * (uFogDensity * 15.0), 2.0)), 0.0, 1.0);
-        
-        vec3 finalUnderwater = mix(waterVolumeColor, uWaterDeep, underwaterFog);
-        
-        fragColor = vec4(finalUnderwater, 1.0);
-        
-        return; 
-    }
-
-
     //NORMALS AND VECTORAL DIRECTIONS
     vec3 normal = normalize(vNormal);
+    if (!gl_FrontFacing){ //Invert normal if we are looking under the water
+        normal = -normal; 
+    }
+
     vec3 viewDirection = normalize(vViewDirection); //We need to normalize again
     vec3 lightDirection = normalize(uSunPosition);
     vec3 upVector = vec3(0.0, 1.0, 0.0);
@@ -179,9 +174,37 @@ void main()
                            
     finalColor = mix(finalColor, dynamicFogColor, fogFactor);
 
+    //DEPTH 
+    vec2 screenUv = gl_FragCoord.xy / uScreenResolution;
+    float rawDepth = texture(uSeafloorDepth, screenUv).r;
+
+    // convert to Z coordinate in view space (returns a negative value)
+    float seafloorViewZ = perspectiveDepthToViewZ(rawDepth, uCameraNear, uCameraFar);
+    float waterViewZ = vViewPosition.z;
+    
+    //Water thickness (negative value in view space)
+    float waterThickness = waterViewZ - seafloorViewZ;
+
+    waterThickness = clamp(waterThickness, 0.0, 500.0);
+
+    // Beer-Lambert Law
+    float alphaAbsorption = 1.0 - exp(-waterThickness / uWaterClarity);
+
+    float finalAlpha = 1.0;
+
+    if (gl_FrontFacing) {
+        if (rawDepth >= 0.9999) { // Margine di sicurezza microscopico
+            finalAlpha = 1.0;
+        } else {
+            finalAlpha = clamp(alphaAbsorption, 0.0, 1.0);
+        }
+    } else {
+        finalAlpha = 1.0;
+    }
     // FINAL COLOR
     finalColor = clamp(finalColor, 0.0, 1.0);
-    fragColor = vec4(finalColor, 1.0);
+
+    fragColor = vec4(finalColor, finalAlpha);
 
     //finalColor = toneMapping(finalColor); //convert tone mapping
     
