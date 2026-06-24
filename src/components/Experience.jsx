@@ -1,5 +1,6 @@
 import { OrbitControls } from '@react-three/drei';
 import { EffectComposer } from '@react-three/postprocessing'
+import { useFrame } from '@react-three/fiber';
 import { Perf } from 'r3f-perf';
 import { useEffect, useRef } from 'react';
 import { UnderwaterPostProcess } from '../postprocessing/UnderwaterPostProcess';
@@ -26,6 +27,26 @@ export default function Experience(){
         }
     }, []);
 
+    //Block orbit controls
+    useFrame(({ camera }) => {
+        if (!controlsRef.current) return;
+
+        if (camera.position.y < -49) {
+            camera.position.y = -49;
+        }
+        
+        if (controlsRef.current.target.y < -49) {
+            controlsRef.current.target.y = -49;
+        }
+
+        if (camera.position.y > 200) {
+            camera.position.y = 200;
+        }
+        if (controlsRef.current.target.y > 150) {
+            controlsRef.current.target.y = 150;
+        }
+    });
+
     return <>
         <Perf position="top-left" />
         <OrbitControls 
@@ -34,7 +55,7 @@ export default function Experience(){
                 enablePan={true}
                 enableZoom={true}
                 minDistance={10}
-                maxDistance={1000}
+                maxDistance={200}
             />
         
         <EnvironmentManager 
@@ -49,55 +70,5 @@ export default function Experience(){
                 oceanDataRef={oceanDataRef}
             />
         </EffectComposer>
-{/* 
-       <mesh position={[0, 50, 0]}>
-            <planeGeometry args={[50, 50]} />
-            <shaderMaterial
-                side={THREE.DoubleSide}
-                uniforms={{ 
-                    uDepth: { value: seafloorDepthTexture },
-                    cameraNear: { value: camera.near },
-                    cameraFar: { value: camera.far }
-                }}
-                vertexShader={`
-                    varying vec2 vUv; 
-                    void main() { 
-                        vUv = uv; 
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); 
-                    }
-                `}
-                fragmentShader={`
-                    #include <packing>
-
-                    uniform sampler2D uDepth; 
-                    uniform float cameraNear;
-                    uniform float cameraFar;
-                    varying vec2 vUv; 
-
-                    // Funzione esatta dell'esempio Three.js per linearizzare
-                    float readDepth( sampler2D depthSampler, vec2 coord ) {
-                        float fragCoordZ = texture2D( depthSampler, coord ).x;
-                        float viewZ = perspectiveDepthToViewZ( fragCoordZ, cameraNear, cameraFar );
-                        return viewZToOrthographicDepth( viewZ, cameraNear, cameraFar );
-                    }
-
-                    void main() { 
-                        // Ora d è un valore LINEARE tra 0.0 (vicino) e 1.0 (lontano)
-                        float d = readDepth(uDepth, vUv); 
-                        
-                        // NOTA BENE SUL DEBUGGING:
-                        // Siccome il tuo camera.far in App.jsx è 10000, e il piano è a -50 o -100 di distanza,
-                        // 'd' sarà un numero minuscolo (es. 100/10000 = 0.01). Sarà quasi tutto NERO.
-                        // Moltiplicalo o invertilo per poterlo vedere ad occhio nudo:
-                        
-                        float visibleDepth = d * 50.0; // Boost visivo solo per debug
-                        
-                        gl_FragColor = vec4(vec3(visibleDepth), 1.0); 
-                    }
-                `}
-            />
-        </mesh> */}
-
-        {/* <gridHelper args={[1000, 100, '#444444', '#222222']} position={[0, -1, 0]} /> */}
     </>
 }
