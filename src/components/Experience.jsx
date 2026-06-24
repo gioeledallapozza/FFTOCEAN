@@ -20,6 +20,8 @@ export default function Experience(){
 
     const seafloorDepthTexture = useSeaFloorDepth();
 
+    const isDebug = window.location.hash === '#debug';
+
     useEffect(() => {
         if (controlsRef.current) {
             controlsRef.current.target.set(0, 0, 0); //Look in the distance -50,0,-100
@@ -48,7 +50,7 @@ export default function Experience(){
     });
 
     return <>
-        <Perf position="top-left" />
+       {isDebug && <Perf position="top-left" />}
         <OrbitControls 
                 ref={controlsRef}
                 makeDefault 
