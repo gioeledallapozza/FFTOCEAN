@@ -50,7 +50,7 @@ export default function EnvironmentManager({depthTexture, oceanDataRef}) {
                 Everything inside Environment background generate a cubemap taht three.js will apply
                 FrameInfinity for dinamyc sky. can be bad for performance
             */}
-            <Environment background resolution={256} frames={1}>
+            <Environment background resolution={256} frames={Infinity}>
                 <SkyManager 
                     sunPosition={globalSunPosition} 
                     sunColor={globalSunColor}

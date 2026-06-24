@@ -33,7 +33,7 @@ export default function OceanManager({depthTexture, oceanDataRef, sunPosition, s
             }, 
             value: getInitialFftResolution() 
         },
-        patchSize: {  value: 250.0, min: 100.0, max: 10000.0, step: 100.0 },
+        patchSize: {  value: 250.0, min: 200.0, max: 10000.0, step: 100.0 },
         displacementScale: { value: 1.0, min: 0.1, max: 1.5, step: 0.1 },
         amplitude: { value: 0.01, min: 0.0000001, max: 0.15, step: 0.001 },
         choppyScale: { value: 1.5, min: 0.0, max: 15.0, step: 0.01}

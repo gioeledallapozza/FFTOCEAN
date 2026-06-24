@@ -46,6 +46,72 @@ export default function Ocean({
         gpgpuTimer.current = 100.0; 
     }, [fftResolution, patchSize, amplitude, windSpeed, windDirection]);
 
+    useEffect(() => {
+        if (!materialRef.current) return;
+        const mat = materialRef.current;
+
+        mat.uResolution = resolution;
+        mat.uBaseVertexSpacing = patchSize / resolution;
+        mat.uPatchSize = patchSize;
+        mat.uScale = displacementScale;
+        mat.uChoppyScale = choppyScale;
+        mat.uNormalScale = optics.normalScale;
+
+        mat.uniforms.uWaterDeep.value.set(waterDeepColor);
+        mat.uniforms.uWaterShallow.value.set(waterShallowColor);
+        mat.uColorMinHeight = optics.colorMinHeight;
+        mat.uColorMaxHeight = optics.colorMaxHeight;
+
+        mat.uniforms.uSunPosition.value.copy(sunPosition);
+        mat.uniforms.uSunColor.value.set(sunColor);
+        mat.uSpecularPower = optics.specularPower;
+        mat.uSpecularMin = optics.specularMin;
+        mat.uSpecularMax = optics.specularMax;
+        mat.uSpecularIntensity = optics.specularIntensity;
+        mat.uFresnelSmoothness = optics.fresnelSmoothness;
+        mat.uFadeStart = optics.fadeStart;
+        mat.uFadeEnd = optics.fadeEnd;
+
+        if (scene.environment) {
+            mat.uniforms.uEnvMap.value = scene.environment;
+        }
+
+        mat.uniforms.uWaterSSS.value.set(optics.waterSSS);
+        mat.uSssPower = optics.sssPower;
+        mat.uSssScale = optics.sssScale;
+        mat.uSssMinHeight = optics.sssMinHeight;
+        mat.uSssMaxHeight = optics.sssMaxHeight;
+        mat.uSssWrap = optics.sssWrap;
+        mat.uSssDistortion = optics.sssDistortion;
+        
+        mat.uniforms.uFoamColor.value.set(optics.foamColor);
+        if (textures.foam) mat.uniforms.uFoamTexture.value = textures.foam;
+        mat.uFoamThreshold = optics.foamThreshold;
+        mat.uFoamScale = optics.foamScale;
+        mat.uniforms.uFoamSpeed.value.set(...optics.foamSpeed);
+        mat.uFoamDistortion = optics.foamDistortion;
+        mat.uFoamEdgeSoftness = optics.foamEdgeSoftness;
+        mat.uFoamPower = optics.foamPower;
+
+        mat.uniforms.uFogColor.value.set(fogColor);
+        mat.uFogDensity = optics.fogDensity;
+        mat.uFogSunScattering = optics.fogSunScattering;
+        mat.uTurbidity = turbidity;
+        mat.uWaterClarity = optics.waterClarity;
+        mat.uSunGlowSize = sunGlowSize;
+        mat.uSunDiskSize = sunDiskSize;
+        mat.uSunDiskIntensity = sunDiskIntensity;
+        mat.uSunGlowIntensity = sunGlowIntensity;   
+
+        mat.uniforms.uSeafloorDepth.value = depthTexture;
+        mat.uniforms.uScreenResolution.value.set(
+            Math.floor(size.width * viewport.dpr), 
+            Math.floor(size.height * viewport.dpr)
+        );
+        mat.uCameraNear = camera.near;
+        mat.uCameraFar = camera.far;
+    }, [camera.far, camera.near, depthTexture, displacementScale, choppyScale, sunPosition, fogColor, patchSize, resolution, scene.environment, sunColor, sunGlowIntensity, sunGlowSize, sunDiskIntensity, sunDiskSize, textures.foam, turbidity, waterDeepColor, waterShallowColor, optics, viewport.dpr, size.height, size.width]);
+
     //Geometry
     const oceanGeometry = useMemo(() => {
         //TODO: add to leva
@@ -70,76 +136,6 @@ export default function Ocean({
 
         if (materialRef.current) {
             materialRef.current.uTime = time;
-
-            // GEOMETRY PROPERTIES
-            materialRef.current.uResolution = resolution;
-            materialRef.current.uBaseVertexSpacing = patchSize / resolution;
-            materialRef.current.uPatchSize = patchSize;
-            materialRef.current.uScale = displacementScale;
-            materialRef.current.uChoppyScale = choppyScale;
-            materialRef.current.uNormalScale = optics.normalScale;
-
-            //BASIC OPTICS
-            materialRef.current.uniforms.uWaterDeep.value.set(waterDeepColor);
-            materialRef.current.uniforms.uWaterShallow.value.set(waterShallowColor);
-            materialRef.current.uColorMinHeight = optics.colorMinHeight;
-            materialRef.current.uColorMaxHeight = optics.colorMaxHeight;
-
-            //SPECULAR
-            materialRef.current.uniforms.uSunPosition.value.copy(sunPosition);
-            materialRef.current.uniforms.uSunColor.value.set(sunColor);
-            materialRef.current.uSpecularPower = optics.specularPower;
-            materialRef.current.uSpecularMin = optics.specularMin;
-            materialRef.current.uSpecularMax = optics.specularMax;
-            materialRef.current.uSpecularIntensity = optics.specularIntensity;
-            materialRef.current.uFresnelSmoothness = optics.fresnelSmoothness;
-            materialRef.current.uFadeStart = optics.fadeStart;
-            materialRef.current.uFadeEnd = optics.fadeEnd;
-
-            //ENVIRONMENT
-            if (scene.environment) {
-                materialRef.current.uniforms.uEnvMap.value = scene.environment;
-            }
-
-            //SSS
-            materialRef.current.uniforms.uWaterSSS.value.set(optics.waterSSS);
-            materialRef.current.uSssPower = optics.sssPower;
-            materialRef.current.uSssScale = optics.sssScale;
-            materialRef.current.uSssMinHeight = optics.sssMinHeight;
-            materialRef.current.uSssMaxHeight = optics.sssMaxHeight;
-            materialRef.current.uSssWrap = optics.sssWrap;
-            materialRef.current.uSssDistortion = optics.sssDistortion;
-            
-            //FOAM
-            materialRef.current.uniforms.uFoamColor.value.set(optics.foamColor);
-            materialRef.current.uniforms.uFoamTexture.value = textures.foam;
-            materialRef.current.uFoamThreshold = optics.foamThreshold;
-            materialRef.current.uFoamScale = optics.foamScale;
-            materialRef.current.uniforms.uFoamSpeed.value.set(...optics.foamSpeed); 
-            materialRef.current.uFoamDistortion = optics.foamDistortion;
-            materialRef.current.uFoamEdgeSoftness = optics.foamEdgeSoftness;
-            materialRef.current.uFoamPower = optics.foamPower;
-
-            // FOG
-            materialRef.current.uniforms.uFogColor.value.set(fogColor);
-            materialRef.current.uFogDensity = optics.fogDensity;
-            materialRef.current.uFogSunScattering = optics.fogSunScattering;
-            materialRef.current.uTurbidity = turbidity;
-            materialRef.current.uWaterClarity = optics.waterClarity;
-            materialRef.current.uSunGlowSize = sunGlowSize;
-            materialRef.current.uSunDiskSize = sunDiskSize;
-            materialRef.current.uSunDiskIntensity = sunDiskIntensity;
-            materialRef.current.uSunGlowIntensity = sunGlowIntensity;   
-
-            // DEPTH TEXTURE E SCREEN SPACE
-            materialRef.current.uniforms.uSeafloorDepth.value = depthTexture;
-           materialRef.current.uniforms.uScreenResolution.value.set(
-                Math.floor(size.width * viewport.dpr), 
-                Math.floor(size.height * viewport.dpr)
-            );
-            materialRef.current.uCameraNear = camera.near;
-            materialRef.current.uCameraFar = camera.far;
-
         }
 
         //GPGPU Physics
@@ -158,7 +154,7 @@ export default function Ocean({
                 materialRef.current.uniforms.uDisplacementZ.value = displacementZ;
             }
 
-          if (oceanDataRef && oceanDataRef.current) {
+            if (oceanDataRef && oceanDataRef.current) {
                 oceanDataRef.current.displacementY = displacementY;
                 oceanDataRef.current.patchSize = patchSize;
                 oceanDataRef.current.scale = displacementScale;
